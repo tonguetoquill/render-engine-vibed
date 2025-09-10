@@ -1,5 +1,4 @@
-#import "@preview/tonguetoquill-usaf-memo:0.0.2": official-memorandum, indorsement
-#import "@preview/cmarker:0.1.6"
+#import "@preview/tonguetoquill-usaf-memo:0.0.3": official-memorandum, indorsement
 
 #set page(margin: 0.75in)
 #set text(size: 10pt)
@@ -8,9 +7,10 @@
   // LETTERHEAD CONFIGURATION
   letterhead-title: "DEPARTMENT OF THE AIR FORCE",
   letterhead-caption: "[YOUR SQUADRON/UNIT NAME]",
-  letterhead-seal: image("assets/dod_seal.png"),
+  letterhead-seal: image("assets/dod_seal.gif"),
+  letterhead-font: "Copperplate CC",
   
-  // RECIPIENTS - Multiple format options shown@preview/tonguetoquill-usaf-memo:0.0.2
+  // RECIPIENTS - Multiple format options shown@preview/tonguetoquill-usaf-memo:0.0.3
   memo-for: (
     // Grid layout example - replace with your recipients
     ("[FIRST/OFFICE]", "[SECOND/OFFICE]", "[THIRD/OFFICE]"),
@@ -64,7 +64,6 @@
   ),
   
   // FORMATTING OPTIONS - Customize appearance
-  letterhead-font: "Arial",                    // Letterhead font (Arial recommended)
   body-font: "Times New Roman",               // Body text font (TNR for AFH 33-337)
   paragraph-block-indent: false,             // true = indent paragraphs, false = block style
   leading-backmatter-pagebreak: false,         // true = force page break before attachments/cc
@@ -97,19 +96,36 @@
     ]
   )
 )[
-    // Main memo body text goes here. Use #cmarker for rich text formatting if needed.
-    // Example:
-  #cmarker.render(
-    ```
-This is the main body of the memorandum. Use this space to clearly and concisely communicate your message.
+ #link("https://github.com/SnpM/tonguetoquill-usaf-memo")[`tonguetoquill-usaf-memo`] is an open-source project maintained on GitHub. See #link("https://github.com/snpm/tonguetoquill-usaf-memo")[the README] for documentation. Please send bug reports and contributions to this repository.
 
-1. test 123
-2. fdsa
-    1. nested 1
-    2. nested 2
-- bullet 1
-- bullet 2
-    ```
-      )
+This memo template demonstrates every parameter and feature of the USAF memorandum template. Replace all bracketed placeholders with your actual content.
+
+This memorandum serves as both a comprehensive guide and working example of the USAF memo template system. The template automatically handles all AFH 33-337 formatting requirements while providing flexibility for various memo types and organizational needs.
+
++ *Required Parameters.* Only two parameters are required: `memo-for` (recipients) and `subject` (subject line in title case). Recipients can be formatted as a string, array, or 2D array for grid layout.
+
++ *Optional Components.* All other parameters are optional and can be omitted if not needed. This includes references, attachments, courtesy copies, distribution lists, and indorsements.
+
+The template provides intelligent paragraph structuring that automatically numbers and formats content according to Air Force standards. Each paragraph and subparagraph is properly spaced and indented without manual intervention.
+
++ *Paragraph Structure.* Use Typst's enum syntax to create hierarchical subparagraphs:
+
+  + Base paragraphs have no enum markers. They are automatically numbered (1., 2., 3., etc.) and formatted per AFH 33-337.
+
+  + First-level subparagraphs use `+ [content]`. These are lettered (a., b., c., etc.) and automatically increment.
+
+    + Use progressive tab indentation before `+` for deeper subparagraphs.
+
+Writing content in Typst follows a markup-based approach that combines simplicity with powerful formatting capabilities. Understanding Typst content mode is essential for effective memo creation.
+
++ *Typst Content Basics.* In Typst, you write content in "content mode" where text flows naturally. Functions are called with `#function-name[]` syntax, and the square brackets contain the content or parameters.
+
++ *Text Formatting.* Use standard markup for emphasis: `*bold text*` for *bold text*, `_italic text_` for _italic text_, and `` `code text` `` for `code text`. These can be combined as needed.
+
++ *Special Characters.* Typst handles most special characters automatically. For literal hash symbols or other Typst syntax characters, escape them with a backslash: `\#` produces \#.
+
++ *Line Breaks and Spacing.* Single line breaks are ignored (like LaTeX). Use double line breaks to create new paragraphs. The template handles all official spacing requirements automatically.
+
+Template features include automatic AFH 33-337 compliant formatting, smart paragraph and subparagraph numbering, intelligent page break handling, grid layout support for multiple recipients, complete indorsement system for routing, and enforcement of all Air Force publishing standards.
 
 ]
