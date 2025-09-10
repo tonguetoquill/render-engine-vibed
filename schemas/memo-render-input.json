@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tonguetoquill/usaf-memo/schema/official-memorandum.json",
+  "title": "Official Memorandum Schema",
+  "description": "JSON schema for AFH 33-337 compliant official memorandum parameters",
+  "type": "object",
+  "properties": {
+    "body": {
+      "type": "object",
+      "description": "Main body content of the memorandum in Slate JSON"
+    },
+    "memo-for": {
+      "description": "Recipient(s) - 2D array for grid layout",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "default": [
+        ["[FIRST/OFFICE]", "[SECOND/OFFICE]", "[THIRD/OFFICE]"],
+        ["[FOURTH/OFFICE]", "[FIFTH/OFFICE]", "[SIXTH/OFFICE]"]
+      ]
+    },
+    "from-block": {
+      "type": "array",
+      "description": "Sender information as array of strings",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "default": [
+        "[YOUR/SYMBOL]",
+        "[Your Organization Name]",
+        "[Street Address]",
+        "[City ST 12345-6789]"
+      ]
+    },
+    "subject": {
+      "type": "string",
+      "description": "Memorandum subject line (required)",
+      "minLength": 1,
+      "default": "[Your Subject in Title Case - Required Field]"
+    },
+    "references": {
+      "type": ["array", "null"],
+      "description": "Optional array of reference documents",
+      "items": {
+        "type": "string"
+      },
+      "default": null
+    },
+    "signature-block": {
+      "type": "array",
+      "description": "Array of signature lines (minimum 2 required per AFH 33-337)",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "default": [
+        "[FIRST M. LAST, Rank, USAF]",
+        "[Your Official Duty Title]",
+        "[Organization (optional)]"
+      ]
+    }
+  },
+  "required": [
+    "memo-for", 
+    "from-block",
+    "subject",
+    "signature-block",
+    "body"
+  ],
+  "additionalProperties": false
+}
