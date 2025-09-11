@@ -198,6 +198,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link 0.2.0",
 ]
@@ -565,21 +566,7 @@ dependencies = [
  "memmap2",
  "slotmap",
  "tinyvec",
- "ttf-parser 0.24.1",
-]
-
-[[package]]
-name = "fontdb"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "457e789b3d1202543297a350643cf459f836cade38934e7a4cf6a39e7cde2905"
-dependencies = [
- "fontconfig-parser",
- "log",
- "memmap2",
- "slotmap",
- "tinyvec",
- "ttf-parser 0.25.1",
+ "ttf-parser",
 ]
 
 [[package]]
@@ -1542,18 +1529,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caf4aa5b0f434c91fe5c7f1ecb6a5ece2130b02ad2a590589dda5146df959001"
 
 [[package]]
-name = "render-engine"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "comemo 0.5.0",
- "ecow",
- "fontdb 0.23.0",
- "typst",
- "typst-pdf",
-]
-
-[[package]]
 name = "resvg"
 version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1618,7 +1593,7 @@ dependencies = [
  "core_maths",
  "log",
  "smallvec",
- "ttf-parser 0.24.1",
+ "ttf-parser",
  "unicode-bidi-mirroring",
  "unicode-ccc",
  "unicode-properties",
@@ -1842,7 +1817,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5014c9dadcf318fb7ef8c16438e95abcc9de1ae24d60d5bccc64c55100c50364"
 dependencies = [
- "fontdb 0.21.0",
+ "fontdb",
  "image",
  "log",
  "miniz_oxide",
@@ -1852,7 +1827,7 @@ dependencies = [
  "siphasher",
  "subsetter",
  "tiny-skia",
- "ttf-parser 0.24.1",
+ "ttf-parser",
  "usvg",
 ]
 
@@ -2099,15 +2074,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ttf-parser"
-version = "0.25.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
-dependencies = [
- "core_maths",
-]
-
-[[package]]
 name = "two-face"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2204,7 +2170,7 @@ dependencies = [
  "kurbo 0.11.3",
  "rustybuzz",
  "smallvec",
- "ttf-parser 0.24.1",
+ "ttf-parser",
  "typst-assets",
  "typst-library",
  "typst-macros",
@@ -2233,7 +2199,7 @@ dependencies = [
  "csv",
  "ecow",
  "flate2",
- "fontdb 0.21.0",
+ "fontdb",
  "hayagriva",
  "icu_properties 1.5.1",
  "icu_provider 1.5.0",
@@ -2262,7 +2228,7 @@ dependencies = [
  "syntect",
  "time",
  "toml",
- "ttf-parser 0.24.1",
+ "ttf-parser",
  "two-face",
  "typed-arena",
  "typst-assets",
@@ -2308,7 +2274,7 @@ dependencies = [
  "serde",
  "subsetter",
  "svg2pdf",
- "ttf-parser 0.24.1",
+ "ttf-parser",
  "typst-assets",
  "typst-library",
  "typst-macros",
@@ -2347,7 +2313,7 @@ dependencies = [
  "ecow",
  "flate2",
  "image",
- "ttf-parser 0.24.1",
+ "ttf-parser",
  "typst-library",
  "typst-macros",
  "typst-timing",
@@ -2397,6 +2363,18 @@ dependencies = [
  "siphasher",
  "thin-vec",
  "unicode-math-class",
+]
+
+[[package]]
+name = "typst-wrapper"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "comemo 0.5.0",
+ "thiserror 1.0.69",
+ "typst",
+ "typst-pdf",
+ "typst-svg",
 ]
 
 [[package]]
@@ -2514,7 +2492,7 @@ dependencies = [
  "base64",
  "data-url",
  "flate2",
- "fontdb 0.21.0",
+ "fontdb",
  "imagesize",
  "kurbo 0.11.3",
  "log",
