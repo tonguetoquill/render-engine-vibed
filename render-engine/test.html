@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Render Engine WASM Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005999;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Render Engine WASM Test</h1>
+    <p>This page tests the render-engine WASM module that wraps the typst-wrapper functionality.</p>
+    
+    <div>
+        <h2>Built-in Tests</h2>
+        <button onclick="runTest()">Test SVG Rendering</button>
+        <button onclick="runPdfTest()">Test PDF Rendering</button>
+    </div>
+    
+    <div>
+        <h2>Custom Typst Input</h2>
+        <p>Enter your own Typst markup to render:</p>
+        <textarea id="customInput" placeholder="Enter Typst markup here...">
+#set page(width: 6in, height: 4in, margin: 0.5in)
+#set text(font: "Arial", size: 14pt)
+
+= Custom Test Document
+
+This is a *custom* test document.
+
+== Features
+- Custom markup input
+- Dynamic rendering
+- WASM integration
+
+Current time: #datetime.today().display()
+        </textarea>
+        <br>
+        <button onclick="renderCustom('svg')">Render as SVG</button>
+        <button onclick="renderCustom('pdf')">Render as PDF</button>
+    </div>
+    
+    <div id="output">Output will appear here...</div>
+    
+    <script type="module">
+        import init, { test, test_pdf, render_typst } from './pkg/render_engine.js';
+        
+        async function run() {
+            // Initialize the WASM module
+            await init();
+            console.log('WASM module loaded successfully!');
+            
+            // Make functions available globally for the buttons
+            window.runTest = async function() {
+                try {
+                    const result = test();
+                    document.getElementById('output').innerHTML = 
+                        `<span class="success">✓ SVG Test Result:</span>\n${result}`;
+                } catch (error) {
+                    document.getElementById('output').innerHTML = 
+                        `<span class="error">✗ SVG Test Error:</span>\n${error}`;
+                }
+            };
+            
+            window.runPdfTest = async function() {
+                try {
+                    const result = test_pdf();
+                    document.getElementById('output').innerHTML = 
+                        `<span class="success">✓ PDF Test Result:</span>\n${result}`;
+                } catch (error) {
+                    document.getElementById('output').innerHTML = 
+                        `<span class="error">✗ PDF Test Error:</span>\n${error}`;
+                }
+            };
+            
+            window.renderCustom = async function(format) {
+                try {
+                    const markup = document.getElementById('customInput').value;
+                    const result = render_typst(markup, format);
+                    document.getElementById('output').innerHTML = 
+                        `<span class="success">✓ Custom ${format.toUpperCase()} Render Result:</span>\n${result}`;
+                } catch (error) {
+                    document.getElementById('output').innerHTML = 
+                        `<span class="error">✗ Custom ${format.toUpperCase()} Render Error:</span>\n${error}`;
+                }
+            };
+            
+            // Show that WASM is ready
+            document.getElementById('output').innerHTML = 
+                '<span class="success">✓ WASM module loaded and ready!</span>\nClick a button to test the render functions.';
+        }
+        
+        run().catch(console.error);
+    </script>
+</body>
+</html>
