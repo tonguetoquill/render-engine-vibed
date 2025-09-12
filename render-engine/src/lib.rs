@@ -19,7 +19,7 @@ pub use typst_wrapper::{
 /// 
 /// # Examples
 /// ```
-/// use render_engine::{render, RenderConfig, OutputFormat};
+/// use render_engine::{render_markup, RenderConfig, OutputFormat};
 /// 
 /// // Render as SVG (default)
 /// let markup = r#"
@@ -31,13 +31,13 @@ pub use typst_wrapper::{
 ///     This is a test document.
 /// "#;
 /// 
-/// let svg_pages = render(markup, None).unwrap();
+/// let svg_pages = render_markup(markup, None).unwrap();
 /// 
 /// // Render as PDF
 /// let config = RenderConfig { format: OutputFormat::Pdf };
-/// let pdf = render(markup, Some(config)).unwrap();
+/// let pdf = render_markup(markup, Some(config)).unwrap();
 /// ```
-pub fn render(
+pub fn render_markup(
     markup: &str,
     config: Option<RenderConfig>,
 ) -> Result<Vec<Vec<u8>>, TypstWrapperError> {

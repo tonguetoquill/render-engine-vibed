@@ -38,7 +38,7 @@
     },
     "from-block": {
       "type": "array",
-      "description": "Sender information as array of strings",
+      "description": "Lines for sender office and address as array of strings",
       "items": {
         "type": "string"
       },

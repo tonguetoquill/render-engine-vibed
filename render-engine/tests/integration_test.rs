@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use render_engine::{render, RenderConfig, OutputFormat};
+use render_engine::{render_markup, RenderConfig, OutputFormat};
 
 #[test]
 fn basic_test() {
@@ -19,7 +19,7 @@ fn test_usaf_template_render() {
     fs::create_dir_all(&svg_dir).expect("Failed to create target/tmp/svg directory");
     
     // Test SVG rendering (all pages) - SVG is the default format
-    let svg_pages_result = render(usaf_template, None);
+    let svg_pages_result = render_markup(usaf_template, None);
     assert!(svg_pages_result.is_ok(), "SVG rendering failed: {:?}", svg_pages_result.err());
     
     let svg_pages = svg_pages_result.unwrap();
@@ -39,7 +39,7 @@ fn test_usaf_template_render() {
         format: OutputFormat::Pdf,
     };
     
-    let pdf_result = render(usaf_template, Some(pdf_config));
+    let pdf_result = render_markup(usaf_template, Some(pdf_config));
     assert!(pdf_result.is_ok(), "PDF rendering failed: {:?}", pdf_result.err());
     
     let pdf_pages = pdf_result.unwrap();
