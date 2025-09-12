@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use render_engine::{TypstWrapper, RenderConfig, OutputFormat};
+use render_engine::{render, RenderConfig, OutputFormat};
 
 // Import the `console.log` function from the `console` module - only in debug builds
 #[cfg(feature = "debug")]
@@ -56,7 +56,7 @@ This demonstrates that the typst-wrapper integration is working correctly.
     };
     
     // Call the render function
-    match TypstWrapper::render(test_markup, Some(config)) {
+    match render(test_markup, Some(config)) {
         Ok(pages) => {
             console_log!("Render successful! Generated {} page(s)", pages.len());
             
@@ -103,7 +103,7 @@ This demonstrates PDF rendering capability.
     };
     
     // Call the render function
-    match TypstWrapper::render(test_markup, Some(config)) {
+    match render(test_markup, Some(config)) {
         Ok(pages) => {
             console_log!("PDF render successful! Generated {} page(s)", pages.len());
             
@@ -135,7 +135,7 @@ pub fn render_typst(markup: &str, format: Option<String>) -> Result<JsValue, JsV
         format: output_format,
     };
     
-    match TypstWrapper::render(markup, Some(config)) {
+    match render(markup, Some(config)) {
         Ok(pages) => {
             console_log!("Custom render successful! Generated {} page(s)", pages.len());
             
@@ -169,7 +169,7 @@ mod tests {
             format: OutputFormat::Svg,
         };
         
-        let result = TypstWrapper::render(test_markup, Some(config));
+        let result = render(test_markup, Some(config));
         assert!(result.is_ok(), "Basic render should succeed");
         
         let pages = result.unwrap();
@@ -185,7 +185,7 @@ mod tests {
             format: OutputFormat::Pdf,
         };
         
-        let result = TypstWrapper::render(test_markup, Some(config));
+        let result = render(test_markup, Some(config));
         assert!(result.is_ok(), "PDF render should succeed");
         
         let pages = result.unwrap();
