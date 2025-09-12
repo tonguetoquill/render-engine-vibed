@@ -42,7 +42,6 @@ This is the main crate that compiles to WASM. It orchestrates the workflow for r
     - serde_json
     - typst
     - typst-svg
-    - comemo
 - Fonts:
     - Arial
     - Times New Roman
