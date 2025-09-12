@@ -1,0 +1,38 @@
+[package]
+name = "wasm-wrapper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[dependencies]
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+render-engine = { path = "../render-engine" }
+web-sys = "0.3"
+console_error_panic_hook = { version = "0.1", optional = true }
+wee_alloc = { version = "0.4.5", optional = true }
+
+[features]
+default = ["console_error_panic_hook"]
+debug = ["console_error_panic_hook"]
+
+# Cargo.toml
+[profile.dev]
+opt-level = 0          # no optimization
+debug = 1              # minimal debug info
+incremental = true     # default, but make it explicit
+lto = false
+codegen-units = 256    # more parallel codegen = faster dev builds
+panic = "unwind"       # keep nice backtraces in dev
+
+# Aggressive size optimizations for release builds
+[profile.release]
+opt-level = "s"          # Optimize for size
+lto = true              # Enable Link Time Optimization
+codegen-units = 1       # Reduce parallel code generation for better optimization
+panic = "abort"         # Don't include unwinding code
+strip = true           # Strip debug info

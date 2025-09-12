@@ -1,48 +1,73 @@
-# lib.rs: render-engine high level design doc
+# lib.rs - Typst Wrapper Design Document
 
-WASM binary that exposes typst-wrapper functionality for web browsers and JavaScript environments.
+Stateless wrapper around Typst's rendering system with embedded assets for USAF memo generation.
 
-## Implementation Status
+## Architecture Overview
 
-✅ **COMPLETED** - The render-engine has been successfully implemented with the following features:
+- **Stateless Wrapper**: Zero-sized struct with static asset initialization
+- **Embedded Assets**: Fonts, templates, and images bundled at compile time
+- **Fresh Worlds**: Each render call creates a new Typst world from static resources
 
-## Exported functions
+## Core Structures
 
-### `test()`
+### `TypstWrapper`
+Stateless unit struct - all functionality provided through static methods.
 
-Calls `TypstWrapper::render()` with a small snippet of dummy Typst markup for testing SVG output. Returns a success message with page count and size information.
+### `RenderConfig`  
+Optional configuration for output format (SVG/PDF).
 
-### `test_pdf()`
+## Core Functions
 
-Similar to `test()` but renders to PDF format for testing PDF output functionality.
+### `new() -> TypstWrapper`
+Returns a zero-cost unit struct. All assets pre-initialized at compile time.
 
-### `render_typst(markup: string, format?: string)`
+### `render(markup: &str, config: Option<RenderConfig>) -> Result<Vec<u8>, TypstWrapperError>`
+Primary rendering function - compiles Typst markup to SVG or PDF using embedded assets.
 
-Accepts arbitrary Typst markup from JavaScript and renders it to the specified format:
-- `markup`: The Typst source code as a string
-- `format`: Optional output format ("svg" or "pdf", defaults to "svg")
 
-### `main()`
+## Error Handling
 
-Initialization function that sets up panic hooks for better error reporting in development.
+Standard `TypstWrapperError` enum covering compilation errors, font issues, and output format problems.
 
-## Architecture
+## Asset Integration
 
-```
-JavaScript ← WASM bindings ← render-engine ← typst-wrapper ← Typst
-```
+All assets embedded at compile time using `include_bytes!` and `include_str!`:
 
-The render-engine acts as a thin WASM wrapper around the typst-wrapper crate, providing web-compatible interfaces while leveraging all the embedded fonts and assets from typst-wrapper.
+- **Fonts**: Arial, Times New Roman, Copperplate CC from `/assets`
+- **Templates**: lib.typ and utils.typ from tonguetoquill-usaf-memo:0.0.3
+- **Images**: DoD seal and other memo assets
 
-## Build Output
+**Benefits**: Self-contained binary, no external file dependencies, fast memory access.
 
-- WASM binary: `pkg/render_engine_bg.wasm`
-- JavaScript bindings: `pkg/render_engine.js` 
-- TypeScript definitions: `pkg/render_engine.d.ts`
-- Package configuration: `pkg/package.json`
+## Implementation Dependencies
 
-## Testing
+### Required Crates
+- `typst` (0.13) - Core Typst compiler
+- `typst-pdf` (0.13) - PDF output format
+- `typst-svg` (0.13) - SVG output format  
+- `chrono` - DateTime handling for Typst world
+- `thiserror` - Error handling derive macros
 
-- Unit tests verify core functionality
-- Interactive HTML test page (`test.html`) for browser testing
-- Local server setup for development testing
+### Internal Dependencies
+- Font parsing and book management
+- File ID and path resolution
+- Source code management and compilation
+- Output format conversion utilities
+
+## Thread Safety & Performance
+
+### Concurrency Considerations
+- Wrapper instances are stateless and thread-safe by design
+- Static resources are initialized at program load time (no runtime initialization)
+- All static resources are immutable and inherently thread-safe
+- Multiple render calls can run concurrently using shared static resources
+- No synchronization primitives needed anywhere
+
+### Performance Optimizations
+- Zero initialization cost - all setup happens at compile/load time
+- Static font book and resolvers eliminate any setup overhead
+- All assets loaded directly from embedded memory (no I/O overhead)
+- Fresh Typst world creation optimized using pre-initialized static resources
+- No lazy evaluation overhead - everything is immediately available
+- Typst's internal compilation caches managed automatically
+- No bells and whistles. Just implement the core functionality.

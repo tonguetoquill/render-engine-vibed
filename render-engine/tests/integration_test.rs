@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use typst_wrapper::{TypstWrapper, RenderConfig, OutputFormat};
+use render_engine::{TypstWrapper, RenderConfig, OutputFormat};
 
 #[test]
 fn basic_test() {

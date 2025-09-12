@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "render-engine",
-    "typst-wrapper",
+    "render-engine",
 ]
 resolver = "2"
 
