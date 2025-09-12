@@ -1,0 +1,3 @@
+[submodule "typst-wrapper/tonguetoquill-usaf-memo"]
+	path = typst-wrapper/tonguetoquill-usaf-memo
+	url = https://github.com/SnpM/tonguetoquill-usaf-memo.git
