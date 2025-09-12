@@ -1,11 +1,6 @@
 use wasm_bindgen::prelude::*;
 use render_engine::{TypstWrapper, RenderConfig, OutputFormat};
 
-// Use wee_alloc as the global allocator for smaller WASM binary size
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 // Import the `console.log` function from the `console` module - only in debug builds
 #[cfg(feature = "debug")]
 #[wasm_bindgen]
