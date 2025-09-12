@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "render-engine",
-    "render-engine",
+    "wasm-wrapper",
 ]
 resolver = "2"
 

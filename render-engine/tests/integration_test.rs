@@ -11,7 +11,7 @@ fn basic_test() {
 #[test]
 fn test_usaf_template_render() {
     // Load the USAF template markup
-    let usaf_template = include_str!("../../tonguetoquill-usaf-memo/usaf-template.typ");
+    let usaf_template = include_str!("../tonguetoquill-usaf-memo/template/usaf-template.typ");
     
     // Create target/tmp/svg directory if it doesn't exist
     let output_dir = Path::new("target/tmp");
