@@ -24,9 +24,10 @@ lto = false
 codegen-units = 256
 panic = "unwind"
 
+# Standard release optimizations
 [profile.release]
-opt-level = "s"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
+opt-level = "s"           # Standard optimization for performance
+lto = true              # Enable Link Time Optimization
+codegen-units = 1       # Reduce parallel code generation for better optimization
+panic = "abort"         # Don't include unwinding code
+strip = true           # Strip debug info

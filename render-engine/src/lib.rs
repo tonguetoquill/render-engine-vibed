@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-use chrono::{DateTime, Datelike, Utc};
 use typst::diag::{FileError, FileResult};
 use typst::foundations::{Bytes, Datetime};
 use typst::layout::PagedDocument;
@@ -207,7 +206,6 @@ struct TypstWorld {
     library: LazyHash<Library>,
     sources: HashMap<FileId, Source>,
     package_sources: HashMap<FileId, Source>,
-    now: DateTime<Utc>,
 }
 
 impl TypstWorld {
@@ -216,7 +214,6 @@ impl TypstWorld {
             library: LazyHash::new(Library::default()),
             sources: HashMap::new(),
             package_sources: HashMap::new(),
-            now: Utc::now(),
         }
     }
     
@@ -310,15 +307,10 @@ impl World for TypstWorld {
         FONTS.get(index).cloned()
     }
     
-    fn today(&self, offset: Option<i64>) -> Option<Datetime> {
-        let offset_duration = chrono::Duration::hours(offset.unwrap_or(0));
-        let datetime = self.now + offset_duration;
-        
-        Datetime::from_ymd(
-            datetime.year(),
-            datetime.month() as u8,
-            datetime.day() as u8,
-        )
+    fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
+        // Return a fixed date since we don't need dynamic dates for this use case
+        // You can change this to the current date or make it configurable if needed
+        Datetime::from_ymd(2024, 1, 1)
     }
 }
 
