@@ -21,9 +21,23 @@
   "description": "JSON schema for AFH 33-337 compliant official memorandum parameters",
   "type": "object",
   "properties": {
+    "letterhead-title": {
+      "type": "string",
+      "description": "Letterhead title (e.g., DEPARTMENT OF THE AIR FORCE)",
+      "default": "DEPARTMENT OF THE AIR FORCE"
+    },
+    "letterhead-caption": {
+      "type": "string",
+      "description": "Optional letterhead caption (e.g., unit name)",
+      "default": "123RD EXAMPLE SQUADRON"
+    },
     "body": {
       "type": "#/$defs/content",
       "description": "Main body content of the memorandum"
+    },
+    "date": {
+      "type": ["string"],
+      "description": "Required date in YYYY-MM-DD format"
     },
     "memo-for": {
       "description": "Recipient(s) as an array of strings (at least one required)",
