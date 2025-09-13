@@ -151,7 +151,7 @@ impl TypstWrapper {
         world.insert_source(json_source);
         
         // Load the memo-loader main template
-        let memo_loader_asset = assets::load_string_asset("memo-loader")
+        let memo_loader_asset = assets::load_string_asset("memo-loader-main")
             .ok_or_else(|| TypstWrapperError::FileNotFound("memo-loader main template not found".to_string()))?;
         
         // Parse the memo-loader template as the main source
@@ -161,7 +161,7 @@ impl TypstWrapper {
         
         // Add memo-loader-utils.typ if it exists
         if let Some(utils_asset) = assets::load_string_asset("memo-loader-utils") {
-            let utils_file_id = FileId::new(None, VirtualPath::new("memo-loader/memo-loader-utils.typ"));
+            let utils_file_id = FileId::new(None, VirtualPath::new("memo-loader/utils.typ"));
             let utils_source = Source::new(utils_file_id, utils_asset.content.to_string());
             world.insert_source(utils_source);
         }
@@ -426,13 +426,15 @@ mod tests {
     
     #[test]
     fn test_render_form() {
-        // Test that render_form works with JSON input
+        // Test that render_form works with JSON input matching the correct schema
         let json_input = r#"{
-            "title": "Test Memo",
-            "from": "Test Sender",
-            "to": "Test Recipient",
+            "memo-for": ["Test Recipient", "Another Recipient"],
+            "from-block": ["Test Sender", "Test Title", "Test Organization"],
             "subject": "Test Subject",
-            "content": "This is a test memo content."
+            "signature-block": ["Test Signature", "Test Title"],
+            "body": {
+                "data": "This is a test memo content."
+            }
         }"#;
         
         let result = TypstWrapper::render_form(json_input, None);
@@ -447,11 +449,13 @@ mod tests {
     fn test_render_form_pdf() {
         // Test that render_form works with PDF output
         let json_input = r#"{
-            "title": "PDF Test Memo",
-            "from": "Test Sender", 
-            "to": "Test Recipient",
+            "memo-for": ["PDF Test Recipient"],
+            "from-block": ["Test Sender", "Test Title"],
             "subject": "PDF Test Subject",
-            "content": "This memo should be rendered as PDF."
+            "signature-block": ["Test Signature", "Test Title"],
+            "body": {
+                "data": "This memo should be rendered as PDF."
+            }
         }"#;
         
         let config = RenderConfig {

@@ -60,15 +60,15 @@ pub fn render_markup(
 /// ```
 /// use render_engine::{render_form, RenderConfig, OutputFormat};
 /// 
-/// // JSON input for the Typst form
+/// // JSON input for the Typst form (official memorandum format)
 /// let json_input = r#"
 /// {
-///     "content": [
-///         "Hello, world!"
-///     ],
-///     "styles": {
-///         "font": "Times",
-///         "size": "12pt"
+///     "memo-for": ["Recipient Name"],
+///     "from-block": ["Sender Name", "Title", "Organization"], 
+///     "subject": "Test Subject",
+///     "signature-block": ["Signature Name", "Title"],
+///     "body": {
+///         "data": "Hello, world! This is the memo content."
 ///     }
 /// }
 /// "#;

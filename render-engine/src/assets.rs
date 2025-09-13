@@ -129,10 +129,18 @@ pub fn resolve_package_file(spec: &PackageSpec, path: &str) -> Option<&'static s
 
 /// Resolve binary asset by path
 pub fn resolve_binary_asset(path: &str) -> Option<&'static [u8]> {
-    match path {
-        "assets/dod_seal.gif" => load_binary_asset("dod_seal.gif").map(|a| a.content),
-        _ => None,
+    // Find the asset by matching the path against registry entries
+    for (_key, asset) in BINARY_ASSET_REGISTRY.iter() {
+        if asset.path == path {
+            return Some(asset.content);
+        }
+        // Also check for relative path matches (e.g., "assets/dod_seal.gif" matching "memo-loader/assets/dod_seal.gif")
+        if path.ends_with(&asset.path.split('/').last().unwrap_or("")) && 
+           asset.path.ends_with(path) {
+            return Some(asset.content);
+        }
     }
+    None
 }
 
 /// Get all font assets for font loading
@@ -169,7 +177,7 @@ mod tests {
     
     #[test]
     fn test_load_existing_string_asset() {
-        let result = load_string_asset("memo-loader");
+        let result = load_string_asset("memo-loader-main");
         assert!(result.is_some());
         
         let asset = result.unwrap();
@@ -195,7 +203,7 @@ mod tests {
     
     #[test]
     fn test_string_asset_exists() {
-        assert!(string_asset_exists("memo-loader"));
+        assert!(string_asset_exists("memo-loader-main"));
         assert!(string_asset_exists("package-lib"));
         assert!(!string_asset_exists("nonexistent"));
     }
@@ -210,7 +218,7 @@ mod tests {
     #[test]
     fn test_get_string_asset_keys() {
         let keys = get_string_asset_keys();
-        assert!(keys.contains(&"memo-loader"));
+        assert!(keys.contains(&"memo-loader-main"));
         assert!(keys.contains(&"memo-loader-utils"));
         assert!(keys.contains(&"package-typst-toml"));
         assert!(keys.contains(&"package-lib"));
