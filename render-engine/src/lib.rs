@@ -43,7 +43,7 @@ pub fn render_markup(
     markup: &str,
     config: Option<RenderConfig>,
 ) -> Result<Vec<Vec<u8>>, TypstWrapperError> {
-    typst_wrapper::TypstWrapper::render(markup, config)
+    typst_wrapper::TypstWrapper::render_markup(markup, config)
 }
 
 /// Render a Typst form from JSON input

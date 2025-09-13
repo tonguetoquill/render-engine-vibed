@@ -53,6 +53,7 @@
         <h2>Built-in Tests</h2>
         <button onclick="runTest()">Test SVG Rendering</button>
         <button onclick="runPdfTest()">Test PDF Rendering</button>
+        <button onclick="runFormTest()">Test Form Rendering</button>
     </div>
     
     <div>
@@ -78,10 +79,29 @@ Current time: #datetime.today().display()
         <button onclick="renderCustom('pdf')">Render as PDF</button>
     </div>
     
+    <div>
+        <h2>Form Rendering Test</h2>
+        <p>Test the memo-loader form rendering with JSON input:</p>
+        <textarea id="formInput" placeholder="Enter JSON for memo form...">
+{
+    "memo-for": ["John Doe", "Jane Smith"],
+    "from-block": ["Test Sender", "Senior Engineer", "123rd Test Squadron"],
+    "subject": "Test Memorandum via WASM",
+    "signature-block": ["Test Signature", "Test Title"],
+    "body": {
+        "data": "This is a test memorandum generated using the WASM wrapper for the render-engine. This demonstrates the integration of Typst rendering capabilities in web browsers."
+    }
+}
+        </textarea>
+        <br>
+        <button onclick="renderForm('svg')">Render Form as SVG</button>
+        <button onclick="renderForm('pdf')">Render Form as PDF</button>
+    </div>
+    
     <div id="output">Output will appear here...</div>
     
     <script type="module">
-        import init, { test, test_pdf, render_typst } from './pkg/render_engine.js';
+        import init, { test, test_pdf, render_typst, render_form_wasm } from './pkg/render_engine.js';
         
         async function run() {
             // Initialize the WASM module

@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use render_engine::{render_markup, RenderConfig, OutputFormat};
+use render_engine::{render_markup, render_form, RenderConfig, OutputFormat};
 
 // Import the `console.log` function from the `console` module - only in debug builds
 #[cfg(feature = "debug")]
@@ -156,6 +156,39 @@ pub fn render_typst(markup: &str, format: Option<String>) -> Result<JsValue, JsV
     }
 }
 
+/// Render a form from JSON input using the memo-loader template
+#[wasm_bindgen]
+pub fn render_form_wasm(json_input: &str, format: Option<String>) -> Result<JsValue, JsValue> {
+    // Parse format parameter
+    let output_format = match format.as_deref().unwrap_or("svg").to_lowercase().as_str() {
+        "pdf" => OutputFormat::Pdf,
+        _ => OutputFormat::Svg,
+    };
+    
+    let config = RenderConfig {
+        format: output_format,
+    };
+    
+    match render_form(json_input, Some(config)) {
+        Ok(pages) => {
+            console_log!("Form render successful! Generated {} page(s)", pages.len());
+            
+            // For JavaScript consumption, return success info with page count and size
+            if !pages.is_empty() {
+                let result = format!("Success: Generated {} pages, first page {} bytes", 
+                                    pages.len(), pages[0].len());
+                Ok(JsValue::from_str(&result))
+            } else {
+                Ok(JsValue::from_str("Success: No pages generated"))
+            }
+        }
+        Err(e) => {
+            console_log!("Form render failed: {:?}", e);
+            Err(JsValue::from_str(&format!("Form render failed: {:?}", e)))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,5 +224,30 @@ mod tests {
         let pages = result.unwrap();
         assert_eq!(pages.len(), 1, "PDF should generate exactly one item");
         assert!(!pages[0].is_empty(), "PDF should have content");
+    }
+    
+    #[test]
+    fn test_form_render() {
+        // Test form rendering with correct JSON schema
+        let json_input = r#"{
+            "memo-for": ["Test Recipient"],
+            "from-block": ["Test Sender", "Test Title", "Test Organization"],
+            "subject": "Test Subject",
+            "signature-block": ["Test Signature", "Test Title"],
+            "body": {
+                "data": "This is test memo content for WASM wrapper."
+            }
+        }"#;
+        
+        let config = RenderConfig {
+            format: OutputFormat::Svg,
+        };
+        
+        let result = render_form(json_input, Some(config));
+        assert!(result.is_ok(), "Form render should succeed: {:?}", result.err());
+        
+        let pages = result.unwrap();
+        assert!(!pages.is_empty(), "Form should generate at least one page");
+        assert!(!pages[0].is_empty(), "First page should have content");
     }
 }

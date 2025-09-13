@@ -125,7 +125,7 @@ impl TypstWrapper {
     }
     
     /// Render Typst markup to bytes (returns array of pages for SVG, single item for PDF)
-    pub fn render(
+    pub fn render_markup(
         markup: &str,
         config: Option<RenderConfig>,
     ) -> Result<Vec<Vec<u8>>, TypstWrapperError> {
@@ -346,7 +346,7 @@ mod tests {
             This is a test document.
         "#;
         
-        let result = TypstWrapper::render(markup, None);
+        let result = TypstWrapper::render_markup(markup, None);
         assert!(result.is_ok());
         
         let pages = result.unwrap();
@@ -369,7 +369,7 @@ mod tests {
             format: OutputFormat::Pdf,
         };
         
-        let result = TypstWrapper::render(markup, Some(config));
+        let result = TypstWrapper::render_markup(markup, Some(config));
         assert!(result.is_ok());
         
         let pages = result.unwrap();
@@ -394,7 +394,7 @@ mod tests {
             The package imported successfully.
         "#;
         
-        let result = TypstWrapper::render(markup, None);
+        let result = TypstWrapper::render_markup(markup, None);
         assert!(result.is_ok(), "Package import should work: {:?}", result.err());
         
         let pages = result.unwrap();
@@ -416,7 +416,7 @@ mod tests {
             This tests that embedded assets like the DOD seal can be loaded.
         "#;
         
-        let result = TypstWrapper::render(markup, None);
+        let result = TypstWrapper::render_markup(markup, None);
         assert!(result.is_ok(), "Asset loading should work: {:?}", result.err());
         
         let pages = result.unwrap();
