@@ -59,7 +59,7 @@ pub fn render_markup(markup: &str, format: Option<String>) -> Result<Vec<u8>, Js
     }
 }
 
-/// Render arbitrary Typst markup from JavaScript
+/// Render from JSON schemaed input
 #[wasm_bindgen]
 pub fn render_form(input_json: &str, format: Option<String>) -> Result<Vec<u8>, JsValue> {
     // Parse format parameter
@@ -82,7 +82,7 @@ pub fn render_form(input_json: &str, format: Option<String>) -> Result<Vec<u8>, 
             // Debug: Check what the first few bytes look like
             if !pages.is_empty() {
                 let _first_bytes = &pages[0][..std::cmp::min(100, pages[0].len())];
-                console_log!("First 100 bytes as string: {}", String::from_utf8_lossy(first_bytes));
+                console_log!("First 100 bytes as string: {}", String::from_utf8_lossy(_first_bytes));
                 Ok(pages[0].clone())
             } else {
                 Err(JsValue::from_str("Error: No pages generated"))

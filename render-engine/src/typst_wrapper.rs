@@ -151,15 +151,17 @@ impl TypstWrapper {
         let timestamp = {
             #[cfg(target_arch = "wasm32")]
             {
-                // Use a hash of the JSON input as a unique identifier for WASM
-                use std::collections::hash_map::DefaultHasher;
-                use std::hash::{Hash, Hasher};
-                
-                let mut hasher = DefaultHasher::new();
-                json_input.hash(&mut hasher);
-                // Add some additional entropy based on string length and content
-                (json_input.len() as u64).hash(&mut hasher);
-                hasher.finish() as u128
+                // Use a deterministic hash instead of random DefaultHasher
+                // Simple FNV-1a hash implementation for deterministic results
+                let mut hash: u64 = 0xcbf29ce484222325; // FNV offset basis
+                for byte in json_input.bytes() {
+                    hash ^= byte as u64;
+                    hash = hash.wrapping_mul(0x100000001b3); // FNV prime
+                }
+                // Add length for additional uniqueness
+                hash ^= json_input.len() as u64;
+                hash = hash.wrapping_mul(0x100000001b3);
+                hash as u128
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -170,10 +172,12 @@ impl TypstWrapper {
             }
         };
         
-        // Add the JSON input as a virtual file with unique path
+        // Use unique filenames but keep them in root to preserve asset paths
         let json_filename = format!("input-{}.json", timestamp);
-        let json_path = format!("memo-loader/{}", json_filename);
-        let json_file_id = FileId::new(None, VirtualPath::new(&json_path));
+        let main_filename = format!("main-{}.typ", timestamp);
+        
+        // Add the JSON input as a virtual file with unique name
+        let json_file_id = FileId::new(None, VirtualPath::new(&json_filename));
         let json_source = Source::new(json_file_id, json_input.to_string());
         world.insert_source(json_source);
         
@@ -181,17 +185,15 @@ impl TypstWrapper {
         let memo_loader_asset = assets::load_string_asset("memo-loader-main")
             .ok_or_else(|| TypstWrapperError::FileNotFound("memo-loader main template not found".to_string()))?;
         
-        // Create modified main template that references the unique JSON file
-        let modified_main_content = memo_loader_asset.content.replace(
+        // Modify the template to reference the unique JSON filename
+        let template_content = memo_loader_asset.content.replace(
             "#let input = json(\"input.json\")",
             &format!("#let input = json(\"{}\")", json_filename)
         );
         
-        
-        // Parse the memo-loader template as the main source with unique path
-        let main_path = format!("memo-loader/main-{}.typ", timestamp);
-        let memo_loader_file_id = FileId::new(None, VirtualPath::new(&main_path));
-        let memo_loader_source = Source::new(memo_loader_file_id, modified_main_content);
+        // Parse the memo-loader template as the main source with unique filename
+        let memo_loader_file_id = FileId::new(None, VirtualPath::new(&main_filename));
+        let memo_loader_source = Source::new(memo_loader_file_id, template_content);
         world.insert_source(memo_loader_source);
         
         Self::render_file(world, config)
@@ -287,9 +289,14 @@ impl World for TypstWorld {
     }
     
     fn main(&self) -> FileId {
+        // Find the main Typst file (not JSON files)
         self.sources
             .values()
-            .find(|source| source.id().package().is_none())
+            .find(|source| {
+                source.id().package().is_none() && 
+                source.id().vpath().as_rootless_path().extension()
+                    .map_or(false, |ext| ext == "typ")
+            })
             .unwrap()
             .id()
     }
