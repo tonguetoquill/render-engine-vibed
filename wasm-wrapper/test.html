@@ -48,12 +48,7 @@
 <body>
     <h1>Render Engine WASM Test</h1>
     <p>This page tests the render-engine WASM module that wraps the typst-wrapper functionality.</p>
-    
-    <div>
-        <h2>Built-in Tests</h2>
-        <button onclick="runTest()">Test SVG Rendering</button>
-        <button onclick="runPdfTest()">Test PDF Rendering</button>
-    </div>
+
     
     <div>
         <h2>Custom Typst Input</h2>
@@ -67,68 +62,141 @@
 This is a *custom* test document.
 
 == Features
-- Custom markup input
-- Dynamic rendering
+- Real-time SVG rendering
+- Dynamic rendering as you type
 - WASM integration
 
 Current time: #datetime.today().display()
         </textarea>
         <br>
-        <button onclick="renderCustom('svg')">Render as SVG</button>
         <button onclick="renderCustom('pdf')">Render as PDF</button>
     </div>
     
     <div id="output">Output will appear here...</div>
     
     <script type="module">
-        import init, { test, test_pdf, render_typst } from './pkg/render_engine.js';
+        import init, { render_markup } from './pkg/wasm_wrapper.js';
         
-        async function run() {
-            // Initialize the WASM module
-            await init();
-            console.log('WASM module loaded successfully!');
+        let wasmLoaded = false;
+        let wasmModule = null;
+        let renderTimeout = null;
+        
+        // Debounced real-time SVG rendering function
+        function renderSvgRealTime() {
+            if (!wasmLoaded) return;
             
-            // Make functions available globally for the buttons
-            window.runTest = async function() {
-                try {
-                    const result = test();
-                    document.getElementById('output').innerHTML = 
-                        `<span class="success">✓ SVG Test Result:</span>\n${result}`;
-                } catch (error) {
-                    document.getElementById('output').innerHTML = 
-                        `<span class="error">✗ SVG Test Error:</span>\n${error}`;
-                }
-            };
+            // Clear any pending render
+            if (renderTimeout) {
+                clearTimeout(renderTimeout);
+            }
             
-            window.runPdfTest = async function() {
-                try {
-                    const result = test_pdf();
-                    document.getElementById('output').innerHTML = 
-                        `<span class="success">✓ PDF Test Result:</span>\n${result}`;
-                } catch (error) {
-                    document.getElementById('output').innerHTML = 
-                        `<span class="error">✗ PDF Test Error:</span>\n${error}`;
-                }
-            };
-            
-            window.renderCustom = async function(format) {
+            // Debounce rendering by 300ms to avoid too frequent updates
+            renderTimeout = setTimeout(() => {
                 try {
                     const markup = document.getElementById('customInput').value;
-                    const result = render_typst(markup, format);
-                    document.getElementById('output').innerHTML = 
-                        `<span class="success">✓ Custom ${format.toUpperCase()} Render Result:</span>\n${result}`;
+                    const resultBytes = render_markup(markup, 'svg');
+                    const svgText = new TextDecoder().decode(resultBytes);
+                    
+                    // Update only the SVG content, preserve any PDF results
+                    const outputDiv = document.getElementById('output');
+                    const existingContent = outputDiv.innerHTML;
+                    
+                    // Check if there's existing PDF content to preserve
+                    if (existingContent.includes('PDF generated successfully')) {
+                        const pdfMatch = existingContent.match(/<div style="margin-top: 10px;">[\s\S]*?<\/div>/);
+                        const pdfContent = pdfMatch ? pdfMatch[0] : '';
+                        
+                        outputDiv.innerHTML = 
+                            `<span class="success">✓ Real-time SVG Preview:</span>\n` +
+                            `<div style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">${svgText}</div>\n` +
+                            (pdfContent ? `\n<span class="success">✓ Latest PDF Render Result:</span>\n${pdfContent}` : '');
+                    } else {
+                        outputDiv.innerHTML = 
+                            `<span class="success">✓ Real-time SVG Preview:</span>\n` +
+                            `<div style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">${svgText}</div>`;
+                    }
                 } catch (error) {
-                    document.getElementById('output').innerHTML = 
-                        `<span class="error">✗ Custom ${format.toUpperCase()} Render Error:</span>\n${error}`;
+                    console.error('Real-time render error:', error);
+                    // Don't show errors for real-time rendering to avoid spam
                 }
-            };
-            
-            // Show that WASM is ready
-            document.getElementById('output').innerHTML = 
-                '<span class="success">✓ WASM module loaded and ready!</span>\nClick a button to test the render functions.';
+            }, 300);
         }
         
-        run().catch(console.error);
+        // Define renderCustom function for PDF rendering only
+        window.renderCustom = function(format) {
+            if (!wasmLoaded) {
+                document.getElementById('output').innerHTML = 
+                    '<span class="error">✗ WASM module not loaded yet. Please wait...</span>';
+                return;
+            }
+            
+            try {
+                const markup = document.getElementById('customInput').value;
+                const resultBytes = render_markup(markup, format);
+                const blob = new Blob([resultBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                
+                // Get existing SVG content to preserve it
+                const outputDiv = document.getElementById('output');
+                const existingContent = outputDiv.innerHTML;
+                const svgMatch = existingContent.match(/<span class="success">✓ Real-time SVG Preview:<\/span>\n<div[^>]*>[\s\S]*?<\/div>/);
+                const svgContent = svgMatch ? svgMatch[0] : '';
+                
+                const pdfContent = 
+                    `<span class="success">✓ PDF Render Result:</span>\n` +
+                    `<div style="margin-top: 10px;">` +
+                    `PDF generated successfully (${resultBytes.length} bytes)<br>` +
+                    `<a href="${url}" download="custom.pdf">Download PDF</a> | ` +
+                    `<a href="${url}" target="_blank">View PDF</a>` +
+                    `</div>`;
+                
+                // Combine SVG and PDF content
+                outputDiv.innerHTML = svgContent + (svgContent ? '\n\n' : '') + pdfContent;
+                
+            } catch (error) {
+                console.error('Render error:', error);
+                const outputDiv = document.getElementById('output');
+                const existingContent = outputDiv.innerHTML;
+                const svgMatch = existingContent.match(/<span class="success">✓ Real-time SVG Preview:<\/span>\n<div[^>]*>[\s\S]*?<\/div>/);
+                const svgContent = svgMatch ? svgMatch[0] : '';
+                
+                outputDiv.innerHTML = svgContent + (svgContent ? '\n\n' : '') + 
+                    `<span class="error">✗ PDF Render Error:</span>\n${error}`;
+            }
+        };
+        
+        async function run() {
+            try {
+                document.getElementById('output').innerHTML = 
+                    '<span>🔄 Loading WASM module...</span>';
+                
+                // Initialize the WASM module
+                wasmModule = await init('./pkg/wasm_wrapper_bg.wasm');
+                wasmLoaded = true;
+                console.log('WASM module loaded successfully!');
+                
+                // Set up real-time rendering
+                const textarea = document.getElementById('customInput');
+                textarea.addEventListener('input', renderSvgRealTime);
+                textarea.addEventListener('keyup', renderSvgRealTime);
+                textarea.addEventListener('paste', () => {
+                    setTimeout(renderSvgRealTime, 50); // Small delay for paste to complete
+                });
+                
+                // Initial render
+                renderSvgRealTime();
+                
+                // Show that WASM is ready
+                document.getElementById('output').innerHTML = 
+                    '<span class="success">✓ WASM module loaded! Real-time SVG rendering active.</span>';
+            } catch (error) {
+                console.error('Failed to load WASM module:', error);
+                document.getElementById('output').innerHTML = 
+                    `<span class="error">✗ Failed to load WASM module: ${error}</span>`;
+            }
+        }
+        
+        run();
     </script>
 </body>
 </html>
