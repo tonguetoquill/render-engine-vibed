@@ -40,11 +40,6 @@ static STRING_ASSET_REGISTRY: LazyLock<HashMap<&'static str, StringAsset>> = Laz
         path: "../memo-loader/main.typ",
     });
     
-    assets.insert("memo-loader-utils", StringAsset {
-        content: include_str!("../memo-loader/utils.typ"),
-        path: "../memo-loader/utils.typ",
-    });
-    
     // Package assets
     assets.insert("package-typst-toml", StringAsset {
         content: include_str!("../tonguetoquill-usaf-memo/typst.toml"),
@@ -119,7 +114,7 @@ pub fn resolve_package_file(spec: &PackageSpec, path: &str) -> Option<&'static s
         match path {
             "typst.toml" => load_string_asset("package-typst-toml").map(|a| a.content),
             "src/lib.typ" => load_string_asset("package-lib").map(|a| a.content),
-            "src/utils.typ" => load_string_asset("package-utils").map(|a| a.content),
+            "src/utils.typ" => load_string_asset("package-utils").map(|a: StringAssetResult| a.content),
             _ => None,
         }
     } else {
@@ -219,7 +214,6 @@ mod tests {
     fn test_get_string_asset_keys() {
         let keys = get_string_asset_keys();
         assert!(keys.contains(&"memo-loader-main"));
-        assert!(keys.contains(&"memo-loader-utils"));
         assert!(keys.contains(&"package-typst-toml"));
         assert!(keys.contains(&"package-lib"));
         assert!(keys.contains(&"package-utils"));
