@@ -146,14 +146,33 @@ impl TypstWrapper {
         // Create a completely fresh world for each render to avoid state pollution
         let mut world = TypstWorld::new();
         
-        // Use unique timestamps to ensure file IDs don't collide between renders
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos();
+        // Use unique identifiers to ensure file IDs don't collide between renders
+        // In WASM environments, SystemTime is not available, so we use a simple hash
+        let timestamp = {
+            #[cfg(target_arch = "wasm32")]
+            {
+                // Use a hash of the JSON input as a unique identifier for WASM
+                use std::collections::hash_map::DefaultHasher;
+                use std::hash::{Hash, Hasher};
+                
+                let mut hasher = DefaultHasher::new();
+                json_input.hash(&mut hasher);
+                // Add some additional entropy based on string length and content
+                (json_input.len() as u64).hash(&mut hasher);
+                hasher.finish() as u128
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_nanos()
+            }
+        };
         
         // Add the JSON input as a virtual file with unique path
-        let json_path = format!("memo-loader/input-{}.json", timestamp);
+        let json_filename = format!("input-{}.json", timestamp);
+        let json_path = format!("memo-loader/{}", json_filename);
         let json_file_id = FileId::new(None, VirtualPath::new(&json_path));
         let json_source = Source::new(json_file_id, json_input.to_string());
         world.insert_source(json_source);
@@ -165,33 +184,14 @@ impl TypstWrapper {
         // Create modified main template that references the unique JSON file
         let modified_main_content = memo_loader_asset.content.replace(
             "#let input = json(\"input.json\")",
-            &format!("#let input = json(\"{}\")", json_path)
+            &format!("#let input = json(\"{}\")", json_filename)
         );
         
-        // Add memo-loader-utils.typ if it exists with unique path
-        let final_main_content = if let Some(utils_asset) = assets::load_string_asset("memo-loader-utils") {
-            let utils_path = format!("memo-loader/utils-{}.typ", timestamp);
-            let utils_file_id = FileId::new(None, VirtualPath::new(&utils_path));
-            
-            // Update imports in main template to reference the unique utils file
-            let updated_content = modified_main_content.replace(
-                "#import \"utils.typ\"",
-                &format!("#import \"{}\"", utils_path)
-            );
-            
-            // Add the utils source
-            let utils_source = Source::new(utils_file_id, utils_asset.content.to_string());
-            world.insert_source(utils_source);
-            
-            updated_content
-        } else {
-            modified_main_content
-        };
         
         // Parse the memo-loader template as the main source with unique path
         let main_path = format!("memo-loader/main-{}.typ", timestamp);
         let memo_loader_file_id = FileId::new(None, VirtualPath::new(&main_path));
-        let memo_loader_source = Source::new(memo_loader_file_id, final_main_content);
+        let memo_loader_source = Source::new(memo_loader_file_id, modified_main_content);
         world.insert_source(memo_loader_source);
         
         Self::render_file(world, config)
