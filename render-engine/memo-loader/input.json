@@ -1,4 +1,6 @@
 {
+  "letterhead-title": "DEPARTMENT OF THE AIR FORCE",
+  "letterhead-caption": "123RD EXAMPLE SQUADRON",
   "memo-for": [
     "FIRST/OFFICE",
     "SECOND/OFFICE"
@@ -22,5 +24,6 @@
   "body": {
     "format": "plaintext",
     "data": "This is the main body content of the memorandum."
-  }
+  },
+  "date": "2024-10-01"
 }

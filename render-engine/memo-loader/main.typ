@@ -1,45 +1,40 @@
 #import "@preview/tonguetoquill-usaf-memo:0.0.3": official-memorandum, indorsement
-#import "utils.typ": validate-memo-input, apply-memo-defaults
+
+#let default(value, default) = if value == none { default } else { value }
 
 #let input = json("input.json")
-
-// Perform validation using consolidated validation framework
-#let validation-errors = validate-memo-input(input)
-
-// Display validation results with clear error reporting
-#if validation-errors.len() > 0 {
-  panic("Input validation failed:\n" + validation-errors.join("\n"))
-}
-
-// If validation passes, apply defaults and generate document
-#let processed-input = apply-memo-defaults(input)
+#let parsed-date(iso-string) = toml(bytes("date =  "+ iso-string )).date
+#input.insert("date", parsed-date(input.date))
 
 // Generate the official memorandum with validated and processed input
 #official-memorandum(
   // Letterhead configuration
-  letterhead-title: "DEPARTMENT OF THE AIR FORCE",
-  letterhead-caption: "123RD EXAMPLE SQUADRON",
+  letterhead-title: default(input.letterhead-title, "DEPARTMENT OF THE AIR FORCE"),
+  letterhead-caption: default(input.letterhead-caption, "123RD EXAMPLE SQUADRON"),
   letterhead-seal: image("assets/dod_seal.gif"),
   letterhead-font: "Copperplate CC",
+
+  // Date
+  date: input.date,
   
   // Recipients
-  memo-for: processed-input.memo-for,
+  memo-for: input.memo-for,
   
   // Sender information
-  from-block: processed-input.from-block,
+  from-block: input.from-block,
   
   // Subject line
-  subject: processed-input.subject,
+  subject: input.subject,
   
   // Optional references
-  references: processed-input.references,
+  references: input.references,
   
   // Signature block
-  signature-block: processed-input.signature-block,
+  signature-block: input.signature-block,
   
 )[
   // Body content from JSON
-  #processed-input.body.data
+  #input.body.data
 ]
 
 
