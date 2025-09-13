@@ -24,6 +24,5 @@
   "body": {
     "format": "plaintext",
     "data": "This is the main body content of the memorandum."
-  },
-  "date": "2024-10-01"
+  }
 }

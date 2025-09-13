@@ -1,21 +1,28 @@
 #import "@preview/tonguetoquill-usaf-memo:0.0.3": official-memorandum, indorsement
 
-#let default(value, default) = if value == none { default } else { value }
 
 #let input = json("input.json")
-#let parsed-date(iso-string) = toml(bytes("date =  "+ iso-string )).date
-#input.insert("date", parsed-date(input.date))
+#let try_get(key, default) = if key not in input { default } else { input.at(key) }
+
+#if "date" in input {
+  let parsed-date(iso-string) = toml(bytes("date =  "+ iso-string )).date
+  let date = parsed-date(input.date)
+  assert(type(date) == datetime,message:  "Error: 'date' must be in YYYY-MM-DD format")
+  input.insert("date", date)
+} else {
+  input.insert("date", datetime.today())
+}
 
 // Generate the official memorandum with validated and processed input
 #official-memorandum(
   // Letterhead configuration
-  letterhead-title: default(input.letterhead-title, "DEPARTMENT OF THE AIR FORCE"),
-  letterhead-caption: default(input.letterhead-caption, "123RD EXAMPLE SQUADRON"),
+  letterhead-title: try_get("letterhead-title", "DEPARTMENT OF THE AIR FORCE"),
+  letterhead-caption: try_get("letterhead-caption", "123RD EXAMPLE SQUADRON"),
   letterhead-seal: image("assets/dod_seal.gif"),
   letterhead-font: "Copperplate CC",
 
   // Date
-  date: input.date,
+  date: try_get("date", datetime.today()),
   
   // Recipients
   memo-for: input.memo-for,
@@ -27,7 +34,7 @@
   subject: input.subject,
   
   // Optional references
-  references: input.references,
+  references: try_get("references", none),
   
   // Signature block
   signature-block: input.signature-block,
