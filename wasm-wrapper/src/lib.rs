@@ -81,7 +81,7 @@ pub fn render_form(input_json: &str, format: Option<String>) -> Result<Vec<u8>, 
             
             // Debug: Check what the first few bytes look like
             if !pages.is_empty() {
-                let first_bytes = &pages[0][..std::cmp::min(100, pages[0].len())];
+                let _first_bytes = &pages[0][..std::cmp::min(100, pages[0].len())];
                 console_log!("First 100 bytes as string: {}", String::from_utf8_lossy(first_bytes));
                 Ok(pages[0].clone())
             } else {
