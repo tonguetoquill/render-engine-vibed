@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use render_engine::{render_markup as engine_render_markup, RenderConfig, OutputFormat};
+use render_engine::{render_markup as engine_render_markup, render_form as engine_render_form, RenderConfig, OutputFormat};
 
 // Import the `console.log` function from the `console` module - only in debug builds
 #[cfg(feature = "debug")]
@@ -42,6 +42,37 @@ pub fn render_markup(markup: &str, format: Option<String>) -> Result<Vec<u8>, Js
     };
     
     match engine_render_markup(markup, Some(config)) {
+        Ok(pages) => {
+            console_log!("Markup render successful! Generated {} page(s)", pages.len());
+            
+            // Return actual content as bytes (works for both SVG and PDF)
+            if !pages.is_empty() {
+                Ok(pages[0].clone())
+            } else {
+                Err(JsValue::from_str("Error: No pages generated"))
+            }
+        }
+        Err(e) => {
+            console_log!("Markup render failed: {:?}", e);
+            Err(JsValue::from_str(&format!("Markup render failed: {:?}", e)))
+        }
+    }
+}
+
+/// Render arbitrary Typst markup from JavaScript
+#[wasm_bindgen]
+pub fn render_form(input_json: &str, format: Option<String>) -> Result<Vec<u8>, JsValue> {
+    // Parse format parameter
+    let output_format = match format.as_deref().unwrap_or("svg").to_lowercase().as_str() {
+        "pdf" => OutputFormat::Pdf,
+        _ => OutputFormat::Svg,
+    };
+    
+    let config = RenderConfig {
+        format: output_format,
+    };
+    
+    match engine_render_form(input_json, Some(config)) {
         Ok(pages) => {
             console_log!("Form render successful! Generated {} page(s)", pages.len());
             
@@ -113,7 +144,7 @@ mod tests {
             format: OutputFormat::Svg,
         };
         
-        let result = render_form(json_input, Some(config));
+        let result = engine_render_form(json_input, Some(config));
         assert!(result.is_ok(), "Form render should succeed: {:?}", result.err());
         
         let pages = result.unwrap();
