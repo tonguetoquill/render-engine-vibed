@@ -36,8 +36,8 @@
       "description": "Main body content of the memorandum"
     },
     "date": {
-      "type": ["string"],
-      "description": "Required date in YYYY-MM-DD format"
+      "type": ["string", "null"],
+      "description": "Optional date in YYYY-MM-DD format; defaults to current date if omitted",
     },
     "memo-for": {
       "description": "Recipient(s) as an array of strings (at least one required)",
