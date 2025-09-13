@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memo Form Test - Render Engine WASM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .form-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+        .form-section h3 {
+            margin-top: 0;
+            color: #34495e;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 8px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+        }
+        .array-input {
+            margin-bottom: 10px;
+        }
+        .array-item {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .array-item input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+        .add-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .add-btn:hover {
+            background-color: #229954;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 6px;
+        }
+        .render-btn {
+            padding: 12px 25px;
+            margin: 5px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .render-btn.svg {
+            background-color: #3498db;
+            color: white;
+        }
+        .render-btn.svg:hover {
+            background-color: #2980b9;
+        }
+        .render-btn.pdf {
+            background-color: #e67e22;
+            color: white;
+        }
+        .render-btn.pdf:hover {
+            background-color: #d35400;
+        }
+        .render-btn.json {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .render-btn.json:hover {
+            background-color: #8e44ad;
+        }
+        #output {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .json-display {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .validation-errors {
+            background-color: #fadbd8;
+            border: 1px solid #e74c3c;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .validation-errors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .validation-errors li {
+            color: #c0392b;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Official Memorandum Form Test</h1>
+        <p>This form generates JSON data conforming to the memo validation schema and renders it using the WASM render engine.</p>
+
+        <form id="memoForm">
+            <!-- Memo For Section -->
+            <div class="form-section">
+                <h3>📧 Memo For (Recipients)</h3>
+                <div id="memoFor" class="array-input">
+                    <div class="array-item">
+                        <input type="text" placeholder="Recipient name/title" value="Commander, Air Force Test Center">
+                        <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="add-btn" onclick="addArrayItem('memoFor', 'Recipient name/title')">Add Recipient</button>
+            </div>
+
+            <!-- From Block Section -->
+            <div class="form-section">
+                <h3>👤 From Block (Sender Information)</h3>
+                <div id="fromBlock" class="array-input">
+                    <div class="array-item">
+                        <input type="text" placeholder="Name" value="John A. Smith">
+                        <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+                    </div>
+                    <div class="array-item">
+                        <input type="text" placeholder="Title" value="Colonel, USAF">
+                        <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+                    </div>
+                    <div class="array-item">
+                        <input type="text" placeholder="Organization" value="412th Test Wing">
+                        <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="add-btn" onclick="addArrayItem('fromBlock', 'Organization/Title line')">Add Line</button>
+            </div>
+
+            <!-- Subject Section -->
+            <div class="form-section">
+                <h3>📋 Subject</h3>
+                <input type="text" id="subject" placeholder="Subject of the memorandum" value="Test Memorandum Generated via WASM Interface">
+            </div>
+
+            <!-- References Section (Optional) -->
+            <div class="form-section">
+                <h3>📚 References (Optional)</h3>
+                <div id="references" class="array-input">
+                    <!-- Initially empty for optional field -->
+                </div>
+                <button type="button" class="add-btn" onclick="addArrayItem('references', 'Reference document')">Add Reference</button>
+            </div>
+
+            <!-- Signature Block Section -->
+            <div class="form-section">
+                <h3>✍️ Signature Block</h3>
+                <div id="signatureBlock" class="array-input">
+                    <div class="array-item">
+                        <input type="text" placeholder="Signature name" value="JOHN A. SMITH">
+                        <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+                    </div>
+                    <div class="array-item">
+                        <input type="text" placeholder="Title/Position" value="Colonel, USAF">
+                        <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="add-btn" onclick="addArrayItem('signatureBlock', 'Title/Position line')">Add Line</button>
+            </div>
+
+            <!-- Body Section -->
+            <div class="form-section">
+                <h3>📄 Body Content</h3>
+                <label for="bodyFormat">Format:</label>
+                <select id="bodyFormat">
+                    <option value="plaintext">Plain Text</option>
+                </select>
+                
+                <label for="bodyData">Content:</label>
+                <textarea id="bodyData" placeholder="Enter the main content of the memorandum">This is a test official memorandum generated using the WASM render engine.
+
+1. This demonstrates form-based input for memo generation
+2. The JSON is validated against the official memorandum schema
+3. Real-time rendering shows immediate results
+
+This memorandum serves as a proof of concept for web-based document generation using Typst and WASM technology integration.</textarea>
+            </div>
+        </form>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="render-btn json" onclick="generateAndShowJSON()">📄 Generate JSON</button>
+            <button class="render-btn svg" onclick="renderMemo('svg')">🖼️ Render as SVG</button>
+            <button class="render-btn pdf" onclick="renderMemo('pdf')">📑 Render as PDF</button>
+        </div>
+
+        <!-- Output Area -->
+        <div id="output">Ready to generate memo. Fill out the form above and click a render button.</div>
+    </div>
+
+    <script type="module">
+        import init, { render_form } from './pkg/wasm_wrapper.js';
+        
+        let wasmLoaded = false;
+        
+        // Array management functions
+        window.addArrayItem = function(containerId, placeholder) {
+            const container = document.getElementById(containerId);
+            const newItem = document.createElement('div');
+            newItem.className = 'array-item';
+            newItem.innerHTML = `
+                <input type="text" placeholder="${placeholder}">
+                <button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+            `;
+            container.appendChild(newItem);
+        };
+        
+        window.removeArrayItem = function(button) {
+            const arrayItem = button.parentElement;
+            const container = arrayItem.parentElement;
+            
+            // Don't allow removing the last item from required arrays
+            const requiredArrays = ['memoFor', 'fromBlock', 'signatureBlock'];
+            if (requiredArrays.includes(container.id) && container.children.length <= 1) {
+                alert('This field requires at least one item.');
+                return;
+            }
+            
+            arrayItem.remove();
+        };
+        
+        // Form data collection
+        function collectArrayData(containerId) {
+            const container = document.getElementById(containerId);
+            const inputs = container.querySelectorAll('input[type="text"]');
+            const values = Array.from(inputs)
+                .map(input => input.value.trim())
+                .filter(value => value.length > 0);
+            
+            return values.length > 0 ? values : null;
+        }
+        
+        function generateMemoJSON() {
+            const memoData = {
+                "memo-for": collectArrayData('memoFor'),
+                "from-block": collectArrayData('fromBlock'),
+                "subject": document.getElementById('subject').value.trim(),
+                "signature-block": collectArrayData('signatureBlock'),
+                "body": {
+                    "format": document.getElementById('bodyFormat').value,
+                    "data": document.getElementById('bodyData').value.trim()
+                }
+            };
+            
+            // Add references only if there are any
+            const references = collectArrayData('references');
+            if (references && references.length > 0) {
+                memoData.references = references;
+            } else {
+                memoData.references = null;
+            }
+            
+            return memoData;
+        }
+        
+        // Client-side validation (basic)
+        function validateMemoData(data) {
+            const errors = [];
+            
+            if (!data["memo-for"] || data["memo-for"].length === 0) {
+                errors.push("Memo For: At least one recipient is required");
+            }
+            
+            if (!data["from-block"] || data["from-block"].length === 0) {
+                errors.push("From Block: At least one line is required");
+            }
+            
+            if (!data.subject || data.subject.length === 0) {
+                errors.push("Subject: Cannot be empty");
+            }
+            
+            if (!data["signature-block"] || data["signature-block"].length < 2) {
+                errors.push("Signature Block: At least 2 lines required (name and title)");
+            }
+            
+            if (!data.body || !data.body.data || data.body.data.length === 0) {
+                errors.push("Body Content: Cannot be empty");
+            }
+            
+            return errors;
+        }
+        
+        // JSON generation and display
+        window.generateAndShowJSON = function() {
+            try {
+                const memoData = generateMemoJSON();
+                const errors = validateMemoData(memoData);
+                
+                const output = document.getElementById('output');
+                
+                if (errors.length > 0) {
+                    output.innerHTML = `
+                        <span class="error">⚠️ Validation Errors:</span>
+                        <div class="validation-errors">
+                            <ul>
+                                ${errors.map(error => `<li>${error}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const jsonString = JSON.stringify(memoData, null, 2);
+                output.innerHTML = `
+                    <span class="success">✅ Generated JSON (Valid):</span>
+                    <div class="json-display">${escapeHtml(jsonString)}</div>
+                `;
+                
+            } catch (error) {
+                document.getElementById('output').innerHTML = 
+                    `<span class="error">❌ Error generating JSON:</span>\n${error.message}`;
+            }
+        };
+        
+        // Memo rendering function
+        window.renderMemo = function(format) {
+            if (!wasmLoaded) {
+                document.getElementById('output').innerHTML = 
+                    '<span class="error">⏳ WASM module not loaded yet. Please wait...</span>';
+                return;
+            }
+            
+            try {
+                const memoData = generateMemoJSON();
+                const errors = validateMemoData(memoData);
+                
+                if (errors.length > 0) {
+                    document.getElementById('output').innerHTML = `
+                        <span class="error">⚠️ Cannot render - Validation Errors:</span>
+                        <div class="validation-errors">
+                            <ul>
+                                ${errors.map(error => `<li>${error}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const jsonString = JSON.stringify(memoData);
+                console.log('Rendering memo with JSON:', jsonString);
+                
+                const resultBytes = render_form(jsonString, format);
+                
+                if (format.toLowerCase() === 'svg') {
+                    const svgText = new TextDecoder().decode(resultBytes);
+                    document.getElementById('output').innerHTML = 
+                        `<span class="success">✅ Memo Rendered as SVG:</span>\n` +
+                        `<div style="border: 2px solid #3498db; padding: 15px; margin-top: 15px; background-color: white;">${svgText}</div>`;
+                } else {
+                    const blob = new Blob([resultBytes], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('output').innerHTML = 
+                        `<span class="success">✅ Memo Rendered as PDF:</span>\n` +
+                        `<div style="margin-top: 15px; padding: 15px; border: 2px solid #e67e22; border-radius: 6px; background-color: #fef9e7;">` +
+                        `📄 PDF generated successfully (${resultBytes.length} bytes)<br><br>` +
+                        `<a href="${url}" download="official-memo.pdf" style="background-color: #e67e22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-right: 10px;">⬇️ Download PDF</a>` +
+                        `<a href="${url}" target="_blank" style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">👁️ View PDF</a>` +
+                        `</div>`;
+                }
+                
+            } catch (error) {
+                console.error('Render error:', error);
+                document.getElementById('output').innerHTML = 
+                    `<span class="error">❌ Render Error:</span>\n<div style="background-color: #fadbd8; padding: 10px; border-radius: 4px; margin-top: 10px;">${error}</div>`;
+            }
+        };
+        
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initialize WASM
+        async function initializeWasm() {
+            try {
+                document.getElementById('output').innerHTML = 
+                    '<span class="warning">🔄 Loading WASM module...</span>';
+                
+                await init('./pkg/wasm_wrapper_bg.wasm');
+                wasmLoaded = true;
+                console.log('WASM module loaded successfully!');
+                
+                document.getElementById('output').innerHTML = 
+                    '<span class="success">✅ WASM module loaded! Ready to generate memos.</span>\n' +
+                    'Fill out the form above and click a render button to test the memo generation.';
+                    
+            } catch (error) {
+                console.error('Failed to load WASM module:', error);
+                document.getElementById('output').innerHTML = 
+                    `<span class="error">❌ Failed to load WASM module:</span>\n${error}`;
+            }
+        }
+        
+        // Start initialization
+        initializeWasm();
+    </script>
+</body>
+</html>

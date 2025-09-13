@@ -32,8 +32,8 @@ pub fn main() {
 #[wasm_bindgen]
 pub fn render_markup(markup: &str, format: Option<String>) -> Result<Vec<u8>, JsValue> {
     // Parse format parameter
-    let output_format = match format.as_deref().unwrap_or("svg").to_lowercase().as_str() {
-        "pdf" => OutputFormat::Pdf,
+    let output_format = match format.as_deref() {
+        Some("pdf") => OutputFormat::Pdf,
         _ => OutputFormat::Svg,
     };
     
@@ -63,8 +63,8 @@ pub fn render_markup(markup: &str, format: Option<String>) -> Result<Vec<u8>, Js
 #[wasm_bindgen]
 pub fn render_form(input_json: &str, format: Option<String>) -> Result<Vec<u8>, JsValue> {
     // Parse format parameter
-    let output_format = match format.as_deref().unwrap_or("svg").to_lowercase().as_str() {
-        "pdf" => OutputFormat::Pdf,
+    let output_format = match format.as_deref() {
+        Some("pdf") | Some("PDF") => OutputFormat::Pdf,
         _ => OutputFormat::Svg,
     };
     
@@ -72,12 +72,17 @@ pub fn render_form(input_json: &str, format: Option<String>) -> Result<Vec<u8>, 
         format: output_format,
     };
     
+    console_log!("Attempting to render form with JSON: {}", input_json);
+    console_log!("Output format: {:?}", output_format);
+    
     match engine_render_form(input_json, Some(config)) {
         Ok(pages) => {
             console_log!("Form render successful! Generated {} page(s)", pages.len());
             
-            // Return actual content as bytes (works for both SVG and PDF)
+            // Debug: Check what the first few bytes look like
             if !pages.is_empty() {
+                let first_bytes = &pages[0][..std::cmp::min(100, pages[0].len())];
+                console_log!("First 100 bytes as string: {}", String::from_utf8_lossy(first_bytes));
                 Ok(pages[0].clone())
             } else {
                 Err(JsValue::from_str("Error: No pages generated"))

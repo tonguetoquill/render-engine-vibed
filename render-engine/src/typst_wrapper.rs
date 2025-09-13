@@ -143,10 +143,18 @@ impl TypstWrapper {
         json_input: &str,
         config: Option<RenderConfig>,
     ) -> Result<Vec<Vec<u8>>, TypstWrapperError> {
+        // Create a completely fresh world for each render to avoid state pollution
         let mut world = TypstWorld::new();
         
-        // Add the JSON input as a virtual file
-        let json_file_id = FileId::new(None, VirtualPath::new("memo-loader/input.json"));
+        // Use unique timestamps to ensure file IDs don't collide between renders
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        
+        // Add the JSON input as a virtual file with unique path
+        let json_path = format!("memo-loader/input-{}.json", timestamp);
+        let json_file_id = FileId::new(None, VirtualPath::new(&json_path));
         let json_source = Source::new(json_file_id, json_input.to_string());
         world.insert_source(json_source);
         
@@ -154,17 +162,37 @@ impl TypstWrapper {
         let memo_loader_asset = assets::load_string_asset("memo-loader-main")
             .ok_or_else(|| TypstWrapperError::FileNotFound("memo-loader main template not found".to_string()))?;
         
-        // Parse the memo-loader template as the main source
-        let memo_loader_file_id = FileId::new(None, VirtualPath::new("memo-loader/main.typ"));
-        let memo_loader_source = Source::new(memo_loader_file_id, memo_loader_asset.content.to_string());
-        world.insert_source(memo_loader_source);
+        // Create modified main template that references the unique JSON file
+        let modified_main_content = memo_loader_asset.content.replace(
+            "#let input = json(\"input.json\")",
+            &format!("#let input = json(\"{}\")", json_path)
+        );
         
-        // Add memo-loader-utils.typ if it exists
-        if let Some(utils_asset) = assets::load_string_asset("memo-loader-utils") {
-            let utils_file_id = FileId::new(None, VirtualPath::new("memo-loader/utils.typ"));
+        // Add memo-loader-utils.typ if it exists with unique path
+        let final_main_content = if let Some(utils_asset) = assets::load_string_asset("memo-loader-utils") {
+            let utils_path = format!("memo-loader/utils-{}.typ", timestamp);
+            let utils_file_id = FileId::new(None, VirtualPath::new(&utils_path));
+            
+            // Update imports in main template to reference the unique utils file
+            let updated_content = modified_main_content.replace(
+                "#import \"utils.typ\"",
+                &format!("#import \"{}\"", utils_path)
+            );
+            
+            // Add the utils source
             let utils_source = Source::new(utils_file_id, utils_asset.content.to_string());
             world.insert_source(utils_source);
-        }
+            
+            updated_content
+        } else {
+            modified_main_content
+        };
+        
+        // Parse the memo-loader template as the main source with unique path
+        let main_path = format!("memo-loader/main-{}.typ", timestamp);
+        let memo_loader_file_id = FileId::new(None, VirtualPath::new(&main_path));
+        let memo_loader_source = Source::new(memo_loader_file_id, final_main_content);
+        world.insert_source(memo_loader_source);
         
         Self::render_file(world, config)
     }
