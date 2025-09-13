@@ -43,7 +43,7 @@ pub fn render_markup(markup: &str, format: Option<String>) -> Result<Vec<u8>, Js
     
     match engine_render_markup(markup, Some(config)) {
         Ok(pages) => {
-            console_log!("Custom render successful! Generated {} page(s)", pages.len());
+            console_log!("Form render successful! Generated {} page(s)", pages.len());
             
             // Return actual content as bytes (works for both SVG and PDF)
             if !pages.is_empty() {
@@ -53,8 +53,8 @@ pub fn render_markup(markup: &str, format: Option<String>) -> Result<Vec<u8>, Js
             }
         }
         Err(e) => {
-            console_log!("Custom render failed: {:?}", e);
-            Err(JsValue::from_str(&format!("Render failed: {:?}", e)))
+            console_log!("Form render failed: {:?}", e);
+            Err(JsValue::from_str(&format!("Form render failed: {:?}", e)))
         }
     }
 }
@@ -94,5 +94,30 @@ mod tests {
         let pages = result.unwrap();
         assert_eq!(pages.len(), 1, "PDF should generate exactly one item");
         assert!(!pages[0].is_empty(), "PDF should have content");
+    }
+    
+    #[test]
+    fn test_form_render() {
+        // Test form rendering with correct JSON schema
+        let json_input = r#"{
+            "memo-for": ["Test Recipient"],
+            "from-block": ["Test Sender", "Test Title", "Test Organization"],
+            "subject": "Test Subject",
+            "signature-block": ["Test Signature", "Test Title"],
+            "body": {
+                "data": "This is test memo content for WASM wrapper."
+            }
+        }"#;
+        
+        let config = RenderConfig {
+            format: OutputFormat::Svg,
+        };
+        
+        let result = render_form(json_input, Some(config));
+        assert!(result.is_ok(), "Form render should succeed: {:?}", result.err());
+        
+        let pages = result.unwrap();
+        assert!(!pages.is_empty(), "Form should generate at least one page");
+        assert!(!pages[0].is_empty(), "First page should have content");
     }
 }
