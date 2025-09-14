@@ -1,24 +1,27 @@
-
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$defs": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/official-memorandum.schema.json",
+  "title": "Official Memorandum Schema",
+  "description": "JSON schema for AFH 33-337 compliant official memorandum parameters",
+  "definitions": {
     "content": {
       "type": "object",
       "properties": {
         "format": {
           "type": "string",
-          "enum": ["markup","delta"],
+          "enum": ["markup", "delta"],
           "description": "Content format type",
           "default": "markup"
         },
         "data": {
           "type": "string",
-          "description": "String data in specified format",
+          "description": "String data in specified format"
         }
+      },
+      "required": ["data"],
+      "additionalProperties": false
     }
   },
-  "title": "Official Memorandum Schema",
-  "description": "JSON schema for AFH 33-337 compliant official memorandum parameters",
   "type": "object",
   "properties": {
     "letterhead-title": {
@@ -32,12 +35,16 @@
       "default": "123RD EXAMPLE SQUADRON"
     },
     "body": {
-      "type": "#/$defs/content",
+      "$ref": "#/definitions/content",
       "description": "Main body content of the memorandum"
+    },
+    "body_raw": {
+      "type": "string",
+      "description": "Pre-rendered Typst markup for the body (used if present)"
     },
     "date": {
       "type": ["string", "null"],
-      "description": "Optional date in YYYY-MM-DD format; defaults to current date if omitted",
+      "description": "Optional date in YYYY-MM-DD format; defaults to current date if omitted"
     },
     "memo-for": {
       "description": "Recipient(s) as an array of strings (at least one required)",
@@ -47,7 +54,12 @@
       },
       "minItems": 1,
       "default": [
-        "[FIRST/OFFICE]", "[SECOND/OFFICE]", "[THIRD/OFFICE]", "[FOURTH/OFFICE]", "[FIFTH/OFFICE]", "[SIXTH/OFFICE]"
+        "[FIRST/OFFICE]",
+        "[SECOND/OFFICE]",
+        "[THIRD/OFFICE]",
+        "[FOURTH/OFFICE]",
+        "[FIFTH/OFFICE]",
+        "[SIXTH/OFFICE]"
       ]
     },
     "from-block": {
@@ -93,11 +105,14 @@
     }
   },
   "required": [
-    "memo-for", 
+    "memo-for",
     "from-block",
     "subject",
-    "signature-block",
-    "body"
+    "signature-block"
+  ],
+  "oneOf": [
+    { "required": ["body"] },
+    { "required": ["body_raw"] }
   ],
   "additionalProperties": false
 }
