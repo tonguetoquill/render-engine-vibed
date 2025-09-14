@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Memo Form Test (Quill) - Render Engine WASM</title>
+	<!-- Quill CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet" />
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 1000px;
+			margin: 0 auto;
+			padding: 20px;
+			background-color: #f5f5f5;
+		}
+		.container {
+			background-color: white;
+			padding: 30px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+		}
+		h1 {
+			color: #2c3e50;
+			border-bottom: 3px solid #3498db;
+			padding-bottom: 10px;
+		}
+		.form-section {
+			margin-bottom: 25px;
+			padding: 20px;
+			border: 1px solid #ddd;
+			border-radius: 6px;
+			background-color: #fafafa;
+		}
+		.form-section h3 {
+			margin-top: 0;
+			color: #34495e;
+			border-bottom: 1px solid #bdc3c7;
+			padding-bottom: 8px;
+		}
+		label {
+			display: block;
+			margin-bottom: 5px;
+			font-weight: bold;
+			color: #2c3e50;
+		}
+		input[type="text"], textarea, select {
+			width: 100%;
+			padding: 10px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			box-sizing: border-box;
+			font-size: 14px;
+		}
+		.array-input { margin-bottom: 10px; }
+		.array-item { display: flex; margin-bottom: 8px; align-items: center; }
+		.array-item input { flex: 1; margin-right: 10px; }
+		.remove-btn {
+			background-color: #e74c3c;
+			color: white;
+			border: none;
+			padding: 8px 12px;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 12px;
+		}
+		.remove-btn:hover { background-color: #c0392b; }
+		.add-btn {
+			background-color: #27ae60;
+			color: white;
+			border: none;
+			padding: 8px 15px;
+			border-radius: 4px;
+			cursor: pointer;
+			margin-top: 10px;
+		}
+		.add-btn:hover { background-color: #229954; }
+		.action-buttons {
+			text-align: center;
+			margin: 30px 0;
+			padding: 20px;
+			background-color: #ecf0f1;
+			border-radius: 6px;
+		}
+		.render-btn {
+			padding: 12px 25px;
+			margin: 5px 10px;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 16px;
+			font-weight: bold;
+			transition: background-color 0.3s;
+		}
+		.render-btn.svg { background-color: #3498db; color: white; }
+		.render-btn.svg:hover { background-color: #2980b9; }
+		.render-btn.pdf { background-color: #e67e22; color: white; }
+		.render-btn.pdf:hover { background-color: #d35400; }
+		.render-btn.json { background-color: #9b59b6; color: white; }
+		.render-btn.json:hover { background-color: #8e44ad; }
+		#output {
+			margin-top: 30px;
+			padding: 20px;
+			background-color: #ffffff;
+			border-radius: 6px;
+			border: 1px solid #ddd;
+			white-space: pre-wrap;
+			box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+		}
+		.error { color: #e74c3c; font-weight: bold; }
+		.success { color: #27ae60; font-weight: bold; }
+		.warning { color: #f39c12; font-weight: bold; }
+		.json-display {
+			background-color: #2c3e50;
+			color: #ecf0f1;
+			padding: 15px;
+			border-radius: 4px;
+			font-family: 'Courier New', monospace;
+			font-size: 12px;
+			overflow-x: auto;
+			margin-top: 10px;
+		}
+		.validation-errors {
+			background-color: #fadbd8;
+			border: 1px solid #e74c3c;
+			border-radius: 4px;
+			padding: 15px;
+			margin-top: 10px;
+		}
+		.validation-errors ul { margin: 0; padding-left: 20px; }
+		.validation-errors li { color: #c0392b; margin-bottom: 5px; }
+
+		/* Quill editor styling */
+		.ql-toolbar.ql-snow { border-radius: 4px 4px 0 0; }
+		.ql-container.ql-snow { border-radius: 0 0 4px 4px; }
+		#editor { height: 220px; background-color: #fff; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>📝 Official Memorandum Form Test (Quill)</h1>
+		<p>This form uses the Quill rich text editor for the body and renders via the WASM render engine. Body is exported as a Delta.</p>
+
+		<form id="memoForm">
+			<!-- Memo For Section -->
+			<div class="form-section">
+				<h3>📧 Memo For (Recipients)</h3>
+				<div id="memoFor" class="array-input">
+					<div class="array-item">
+						<input type="text" placeholder="Recipient name/title" value="Commander, Air Force Test Center" />
+						<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+					</div>
+				</div>
+				<button type="button" class="add-btn" onclick="addArrayItem('memoFor', 'Recipient name/title')">Add Recipient</button>
+			</div>
+
+			<!-- From Block Section -->
+			<div class="form-section">
+				<h3>👤 From Block (Sender Information)</h3>
+				<div id="fromBlock" class="array-input">
+					<div class="array-item">
+						<input type="text" placeholder="Name" value="John A. Smith" />
+						<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+					</div>
+					<div class="array-item">
+						<input type="text" placeholder="Title" value="Colonel, USAF" />
+						<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+					</div>
+					<div class="array-item">
+						<input type="text" placeholder="Organization" value="412th Test Wing" />
+						<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+					</div>
+				</div>
+				<button type="button" class="add-btn" onclick="addArrayItem('fromBlock', 'Organization/Title line')">Add Line</button>
+			</div>
+
+			<!-- Subject Section -->
+			<div class="form-section">
+				<h3>📋 Subject</h3>
+				<input type="text" id="subject" placeholder="Subject of the memorandum" value="Test Memorandum (Quill) Generated via WASM Interface" />
+			</div>
+
+			<!-- Signature Block Section -->
+			<div class="form-section">
+				<h3>✍️ Signature Block</h3>
+				<div id="signatureBlock" class="array-input">
+					<div class="array-item">
+						<input type="text" placeholder="Signature name" value="JOHN A. SMITH" />
+						<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+					</div>
+					<div class="array-item">
+						<input type="text" placeholder="Title/Position" value="Colonel, USAF" />
+						<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+					</div>
+				</div>
+				<button type="button" class="add-btn" onclick="addArrayItem('signatureBlock', 'Title/Position line')">Add Line</button>
+			</div>
+
+			<!-- References Section (Optional) -->
+			<div class="form-section">
+				<h3>📚 References (Optional)</h3>
+				<div id="references" class="array-input"></div>
+				<button type="button" class="add-btn" onclick="addArrayItem('references', 'Reference document')">Add Reference</button>
+			</div>
+
+			<!-- Body Section with Quill -->
+			<div class="form-section">
+				<h3>📄 Body Content (Quill - Delta)</h3>
+				<label>Editor:</label>
+				<div id="toolbar">
+					<span class="ql-formats">
+						<select class="ql-header">
+							<option selected></option>
+							<option value="1"></option>
+							<option value="2"></option>
+						</select>
+						<select class="ql-font"></select>
+					</span>
+					<span class="ql-formats">
+						<button class="ql-bold"></button>
+						<button class="ql-italic"></button>
+						<button class="ql-underline"></button>
+						<button class="ql-strike"></button>
+					</span>
+					<span class="ql-formats">
+						<select class="ql-color"></select>
+						<select class="ql-background"></select>
+					</span>
+					<span class="ql-formats">
+						<button class="ql-list" value="ordered"></button>
+						<button class="ql-list" value="bullet"></button>
+						<button class="ql-indent" value="-1"></button>
+						<button class="ql-indent" value="+1"></button>
+					</span>
+					<span class="ql-formats">
+						<button class="ql-link"></button>
+						<button class="ql-blockquote"></button>
+						<button class="ql-code-block"></button>
+					</span>
+					<span class="ql-formats">
+						<button class="ql-clean"></button>
+					</span>
+				</div>
+				<div id="editor"></div>
+				<div style="margin-top: 8px; font-size: 12px; color: #666;">
+					The body will be sent with format "delta" and data from <code>quill.getContents()</code>.
+				</div>
+			</div>
+		</form>
+
+		<!-- Action Buttons -->
+		<div class="action-buttons">
+			<button class="render-btn json" onclick="generateAndShowJSON()">📄 Generate JSON</button>
+			<button class="render-btn svg" onclick="renderMemo('svg')">🖼️ Render as SVG</button>
+			<button class="render-btn pdf" onclick="renderMemo('pdf')">📑 Render as PDF</button>
+			<button class="render-btn" style="background-color: #95a5a6; color: white;" onclick="showPerformanceHistory()">📊 Performance Stats</button>
+		</div>
+
+		<!-- Output Area -->
+		<div id="output">Ready to generate memo. Fill out the form above and click a render button.</div>
+	</div>
+
+	<!-- Quill JS -->
+	<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
+	<script type="module">
+		import init, { render_form } from './pkg/wasm_wrapper.js';
+
+		let wasmLoaded = false;
+		let performanceHistory = [];
+		let quill; // Quill editor instance
+		let liveRenderTimer = null; // debounce timer for live rendering
+
+		// Simple debounce to avoid excessive renders while typing
+		function debounce(fn, delay = 100) {
+			return (...args) => {
+				if (liveRenderTimer) clearTimeout(liveRenderTimer);
+				liveRenderTimer = setTimeout(() => fn(...args), delay);
+			};
+		}
+
+		// Schedule a live SVG render (debounced)
+		const scheduleRender = debounce(() => {
+			if (!wasmLoaded) return;
+			renderLiveSVG();
+		}, 400);
+
+		// Array management functions
+		window.addArrayItem = function(containerId, placeholder) {
+			const container = document.getElementById(containerId);
+			const newItem = document.createElement('div');
+			newItem.className = 'array-item';
+			newItem.innerHTML = `
+				<input type="text" placeholder="${placeholder}">
+				<button type="button" class="remove-btn" onclick="removeArrayItem(this)">Remove</button>
+			`;
+			container.appendChild(newItem);
+			scheduleRender();
+		};
+
+		window.removeArrayItem = function(button) {
+			const arrayItem = button.parentElement;
+			const container = arrayItem.parentElement;
+			const requiredArrays = ['memoFor', 'fromBlock', 'signatureBlock'];
+			if (requiredArrays.includes(container.id) && container.children.length <= 1) {
+				alert('This field requires at least one item.');
+				return;
+			}
+			arrayItem.remove();
+			scheduleRender();
+		};
+
+		// Form data collection
+		function collectArrayData(containerId) {
+			const container = document.getElementById(containerId);
+			const inputs = container.querySelectorAll('input[type="text"]');
+			const values = Array.from(inputs)
+				.map(input => input.value.trim())
+				.filter(value => value.length > 0);
+			return values.length > 0 ? values : null;
+		}
+
+		function generateMemoJSON() {
+			const delta = quill.getContents();
+			const memoData = {
+				"memo-for": collectArrayData('memoFor'),
+				"from-block": collectArrayData('fromBlock'),
+				"subject": document.getElementById('subject').value.trim(),
+				"signature-block": collectArrayData('signatureBlock'),
+				"body": {
+					"format": "delta",
+					"data": JSON.stringify(delta)
+				}
+			};
+
+			const references = collectArrayData('references');
+			memoData.references = references && references.length > 0 ? references : null;
+			return memoData;
+		}
+
+		// Client-side validation (basic)
+		function validateMemoData(data) {
+			const errors = [];
+			if (!data["memo-for"] || data["memo-for"].length === 0) {
+				errors.push("Memo For: At least one recipient is required");
+			}
+			if (!data["from-block"] || data["from-block"].length === 0) {
+				errors.push("From Block: At least one line is required");
+			}
+			if (!data.subject || data.subject.length === 0) {
+				errors.push("Subject: Cannot be empty");
+			}
+			if (!data["signature-block"] || data["signature-block"].length < 2) {
+				errors.push("Signature Block: At least 2 lines required (name and title)");
+			}
+			// Validate Quill content via plaintext length
+			const textLen = quill.getText().trim().length;
+			if (textLen === 0) {
+				errors.push("Body Content: Cannot be empty");
+			}
+			return errors;
+		}
+
+		// JSON generation and display
+		window.generateAndShowJSON = function() {
+			const startTime = performance.now();
+			try {
+				const memoData = generateMemoJSON();
+				const errors = validateMemoData(memoData);
+				const output = document.getElementById('output');
+				if (errors.length > 0) {
+					output.innerHTML = `
+						<span class="error">⚠️ Validation Errors:</span>
+						<div class="validation-errors">
+							<ul>
+								${errors.map(error => `<li>${error}</li>`).join('')}
+							</ul>
+						</div>
+					`;
+					return;
+				}
+				const jsonString = JSON.stringify(memoData, null, 2);
+				const generateTime = Math.round((performance.now() - startTime) * 100) / 100;
+				output.innerHTML = `
+					<span class="success">✅ Generated JSON (Valid) in ${generateTime}ms:</span>
+					<div style="margin-bottom: 10px; padding: 8px; background-color: #e8f5e8; border-radius: 4px; font-size: 14px;">
+						⏱️ <strong>Performance:</strong> ${generateTime}ms generation time | ${jsonString.length} characters
+					</div>
+					<div class="json-display">${escapeHtml(jsonString)}</div>
+				`;
+			} catch (error) {
+				const errorTime = Math.round((performance.now() - startTime) * 100) / 100;
+				document.getElementById('output').innerHTML =
+					`<span class="error">❌ Error generating JSON (failed after ${errorTime}ms):</span>\n${error.message}`;
+			}
+		};
+
+		// Live SVG rendering (used for real-time updates)
+		function renderLiveSVG() {
+			let renderStartTime;
+			try {
+				const memoData = generateMemoJSON();
+				const errors = validateMemoData(memoData);
+				if (errors.length > 0) {
+					document.getElementById('output').innerHTML = `
+						<span class="warning">⚠️ Live preview pending — please fix validation issues.</span>
+						<div class="validation-errors">
+							<ul>
+								${errors.map(error => `<li>${error}</li>`).join('')}
+							</ul>
+						</div>
+					`;
+					return;
+				}
+				const jsonString = JSON.stringify(memoData);
+				renderStartTime = performance.now();
+				const resultBytes = render_form(jsonString, 'svg');
+				const renderEndTime = performance.now();
+				const renderTimeMs = Math.round((renderEndTime - renderStartTime) * 100) / 100;
+				const perfEntry = {
+					timestamp: new Date().toISOString(),
+					format: 'SVG',
+					renderTime: renderTimeMs,
+					outputSize: resultBytes.length,
+					success: true
+				};
+				performanceHistory.push(perfEntry);
+				const svgText = new TextDecoder().decode(resultBytes);
+				document.getElementById('output').innerHTML =
+					`<span class="success">✅ Live SVG preview (${renderTimeMs}ms)</span>` +
+					`<div style=\"margin-bottom: 10px; padding: 8px; background-color: #e8f5e8; border-radius: 4px; font-size: 14px;\">` +
+					`⏱️ <strong>Performance:</strong> ${renderTimeMs}ms render time | ${resultBytes.length} bytes` +
+					`</div>` +
+					`<div style=\"border: 2px solid #3498db; padding: 15px; margin-top: 15px; background-color: white;\">${svgText}</div>`;
+			} catch (error) {
+				const errorTime = typeof renderStartTime !== 'undefined' ?
+					Math.round((performance.now() - renderStartTime) * 100) / 100 : 'unknown';
+				if (typeof renderStartTime !== 'undefined') {
+					const errorEntry = {
+						timestamp: new Date().toISOString(),
+						format: 'SVG',
+						renderTime: errorTime,
+						outputSize: 0,
+						success: false,
+						error: error.toString()
+					};
+					performanceHistory.push(errorEntry);
+				}
+				document.getElementById('output').innerHTML =
+					`<span class="error">❌ Live render error (after ${errorTime}ms):</span>\n` +
+					`<div style=\"background-color: #fadbd8; padding: 10px; border-radius: 4px; margin-top: 10px;\">${error}</div>`;
+			}
+		}
+
+		// Memo rendering function
+		window.renderMemo = function(format) {
+			if (!wasmLoaded) {
+				document.getElementById('output').innerHTML =
+					'<span class="error">⏳ WASM module not loaded yet. Please wait...</span>';
+				return;
+			}
+			let renderStartTime;
+			try {
+				const memoData = generateMemoJSON();
+				const errors = validateMemoData(memoData);
+				if (errors.length > 0) {
+					document.getElementById('output').innerHTML = `
+						<span class="error">⚠️ Cannot render - Validation Errors:</span>
+						<div class="validation-errors">
+							<ul>
+								${errors.map(error => `<li>${error}</li>`).join('')}
+							</ul>
+						</div>
+					`;
+					return;
+				}
+				const jsonString = JSON.stringify(memoData);
+				console.log('Rendering memo with JSON:', memoData);
+				renderStartTime = performance.now();
+				document.getElementById('output').innerHTML =
+					`<span class="warning">🔄 Rendering ${format.toUpperCase()}... Please wait.</span>`;
+				const resultBytes = render_form(jsonString, format);
+				const renderEndTime = performance.now();
+				const renderTimeMs = Math.round((renderEndTime - renderStartTime) * 100) / 100;
+				const perfEntry = {
+					timestamp: new Date().toISOString(),
+					format: format.toUpperCase(),
+					renderTime: renderTimeMs,
+					outputSize: resultBytes.length,
+					success: true
+				};
+				performanceHistory.push(perfEntry);
+				console.log('Render Performance:', perfEntry);
+				const avgTime = performanceHistory.length > 0 ?
+					Math.round((performanceHistory.reduce((sum, p) => sum + p.renderTime, 0) / performanceHistory.length) * 100) / 100 : 0;
+				const historyText = performanceHistory.length > 1 ?
+					` | Avg: ${avgTime}ms (${performanceHistory.length} renders)` : '';
+				if (format.toLowerCase() === 'svg') {
+					const svgText = new TextDecoder().decode(resultBytes);
+					document.getElementById('output').innerHTML =
+						`<span class="success">✅ Memo Rendered as SVG in ${renderTimeMs}ms:</span>\n` +
+						`<div style=\"margin-bottom: 10px; padding: 8px; background-color: #e8f5e8; border-radius: 4px; font-size: 14px;\">` +
+						`⏱️ <strong>Performance:</strong> ${renderTimeMs}ms render time | ${resultBytes.length} bytes generated${historyText}` +
+						`</div>` +
+						`<div style=\"border: 2px solid #3498db; padding: 15px; margin-top: 15px; background-color: white;\">${svgText}</div>`;
+				} else {
+					const blob = new Blob([resultBytes], { type: 'application/pdf' });
+					const url = URL.createObjectURL(blob);
+					document.getElementById('output').innerHTML =
+						`<span class="success">✅ Memo Rendered as PDF in ${renderTimeMs}ms:</span>\n` +
+						`<div style=\"margin-bottom: 10px; padding: 8px; background-color: #e8f5e8; border-radius: 4px; font-size: 14px;\">` +
+						`⏱️ <strong>Performance:</strong> ${renderTimeMs}ms render time | ${resultBytes.length} bytes generated${historyText}` +
+						`</div>` +
+						`<div style=\"margin-top: 15px; padding: 15px; border: 2px solid #e67e22; border-radius: 6px; background-color: #fef9e7;\">` +
+						`📄 PDF generated successfully<br><br>` +
+						`<a href=\"${url}\" download=\"official-memo.pdf\" style=\"background-color: #e67e22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-right: 10px;\">⬇️ Download PDF</a>` +
+						`<a href=\"${url}\" target=\"_blank\" style=\"background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;\">👁️ View PDF</a>` +
+						`</div>`;
+				}
+			} catch (error) {
+				const errorTime = typeof renderStartTime !== 'undefined' ?
+					Math.round((performance.now() - renderStartTime) * 100) / 100 : 'unknown';
+				if (typeof renderStartTime !== 'undefined') {
+					const errorEntry = {
+						timestamp: new Date().toISOString(),
+						format: format.toUpperCase(),
+						renderTime: errorTime,
+						outputSize: 0,
+						success: false,
+						error: error.toString()
+					};
+					performanceHistory.push(errorEntry);
+					console.error('Render Performance (Error):', errorEntry);
+				}
+				console.error('Render error:', error);
+				document.getElementById('output').innerHTML =
+					`<span class="error">❌ Render Error (failed after ${errorTime}ms):</span>\n` +
+					`<div style=\"background-color: #fadbd8; padding: 10px; border-radius: 4px; margin-top: 10px;\">${error}</div>`;
+			}
+		};
+
+		// Performance history display
+		window.showPerformanceHistory = function() {
+			if (performanceHistory.length === 0) {
+				document.getElementById('output').innerHTML =
+					'<span class="warning">📊 No performance data yet. Try rendering some memos first!</span>';
+				return;
+			}
+			const successful = performanceHistory.filter(p => p.success);
+			const failed = performanceHistory.filter(p => !p.success);
+			const avgTime = successful.length > 0 ?
+				Math.round((successful.reduce((sum, p) => sum + p.renderTime, 0) / successful.length) * 100) / 100 : 0;
+			const avgSize = successful.length > 0 ?
+				Math.round(successful.reduce((sum, p) => sum + p.outputSize, 0) / successful.length) : 0;
+			const historyTable = performanceHistory.slice(-10).reverse().map(entry =>
+				`<tr style="background-color: ${entry.success ? '#f8fff8' : '#fff8f8'};">
+					<td style="padding: 5px; border: 1px solid #ddd;">${entry.timestamp.split('T')[1].split('.')[0]}</td>
+					<td style="padding: 5px; border: 1px solid #ddd;">${entry.format}</td>
+					<td style="padding: 5px; border: 1px solid #ddd;">${entry.renderTime}ms</td>
+					<td style="padding: 5px; border: 1px solid #ddd;">${entry.success ? entry.outputSize + ' bytes' : 'Failed'}</td>
+					<td style="padding: 5px; border: 1px solid #ddd;">${entry.success ? '✅' : '❌'}</td>
+				</tr>`
+			).join('');
+			document.getElementById('output').innerHTML = `
+				<span class="success">📊 Performance Statistics:</span>
+				<div style="margin: 15px 0; padding: 15px; background-color: #f0f8ff; border-radius: 6px;">
+					<h4 style="margin: 0 0 10px 0;">Summary</h4>
+					<p><strong>Total Renders:</strong> ${performanceHistory.length} (${successful.length} successful, ${failed.length} failed)</p>
+					<p><strong>Average Render Time:</strong> ${avgTime}ms</p>
+					<p><strong>Average Output Size:</strong> ${avgSize} bytes</p>
+				</div>
+				<div style="margin: 15px 0;">
+					<h4>Recent Renders (last 10):</h4>
+					<table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+						<thead>
+							<tr style="background-color: #e9e9e9;">
+								<th style="padding: 8px; border: 1px solid #ddd;">Time</th>
+								<th style="padding: 8px; border: 1px solid #ddd;">Format</th>
+								<th style="padding: 8px; border: 1px solid #ddd;">Duration</th>
+								<th style="padding: 8px; border: 1px solid #ddd;">Output</th>
+								<th style="padding: 8px; border: 1px solid #ddd;">Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							${historyTable}
+						</tbody>
+					</table>
+				</div>
+				<div style="margin-top: 10px; font-size: 12px; color: #666;">
+					💡 Tip: Check browser console for detailed performance logs
+				</div>
+			`;
+		};
+
+		// Utility function to escape HTML
+		function escapeHtml(text) {
+			const div = document.createElement('div');
+			div.textContent = text;
+			return div.innerHTML;
+		}
+
+		// Initialize Quill and WASM
+		function initializeQuill() {
+			quill = new Quill('#editor', {
+				theme: 'snow',
+				modules: {
+					toolbar: '#toolbar'
+				},
+				placeholder: 'Write the memorandum body here...'
+			});
+			// Seed some default content similar to the plain form
+			quill.setText(`This is a test official memorandum generated using the WASM render engine.\n\n1. This demonstrates form-based input for memo generation\n2. The JSON is validated against the official memorandum schema\n3. Real-time rendering shows immediate results\n\nThis memorandum serves as a proof of concept for web-based document generation using Typst and WASM technology integration.\n`);
+			// Live render on editor changes (debounced)
+			quill.on('text-change', scheduleRender);
+			// Live render on any text input changes in the form (delegated)
+			document.getElementById('memoForm').addEventListener('input', (e) => {
+				if (e.target && e.target.matches('input[type="text"], textarea, select')) {
+					scheduleRender();
+				}
+			});
+		}
+
+		async function initializeWasm() {
+			try {
+				document.getElementById('output').innerHTML =
+					'<span class="warning">🔄 Loading WASM module...</span>';
+				await init('./pkg/wasm_wrapper_bg.wasm');
+				wasmLoaded = true;
+				console.log('WASM module loaded successfully!');
+				document.getElementById('output').innerHTML =
+					'<span class="success">✅ WASM module loaded! Ready to generate memos.</span>\n' +
+					'Fill out the form above and click a render button to test the memo generation.';
+				// Trigger an initial live render once WASM is ready
+				renderLiveSVG();
+			} catch (error) {
+				console.error('Failed to load WASM module:', error);
+				document.getElementById('output').innerHTML =
+					`<span class=\"error\">❌ Failed to load WASM module:</span>\n${error}`;
+			}
+		}
+
+		// Start initialization
+		initializeQuill();
+		initializeWasm();
+	</script>
+</body>
+<!--
+Notes:
+- Body format is fixed to "delta" and we export content via quill.getContents().
+- This page mirrors test_form.html but swaps the textarea for a Quill editor.
+-->
+</html>
