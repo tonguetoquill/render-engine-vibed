@@ -30,6 +30,19 @@ pub struct BinaryAssetResult {
     pub path: &'static str,
 }
 
+/// Replaces 'latest' with this version in package imports
+const PACKAGE_VERSION: &'static str = "0.1.0";
+
+/// Rewrite any `:latest` package imports in the provided Typst markup to a
+/// concrete version to satisfy Typst's version parser. This only targets the
+/// tonguetoquill-usaf-memo package in the preview namespace.
+pub fn rewrite_latest_imports(markup: &str) -> String {
+    markup.replace(
+        "@preview/tonguetoquill-usaf-memo:latest",
+        &format!("@preview/tonguetoquill-usaf-memo:{}", PACKAGE_VERSION),
+    )
+}
+
 /// Static string asset registry
 static STRING_ASSET_REGISTRY: LazyLock<HashMap<&'static str, StringAsset>> = LazyLock::new(|| {
     let mut assets = HashMap::new();
@@ -110,7 +123,8 @@ pub fn load_binary_asset(key: &str) -> Option<BinaryAssetResult> {
 
 /// Resolve package file content by package spec and path
 pub fn resolve_package_file(spec: &PackageSpec, path: &str) -> Option<&'static str> {
-    if spec.namespace == "preview" && spec.name == "tonguetoquill-usaf-memo" && spec.version.to_string() == "0.1.0" {
+
+    if spec.namespace == "preview" && spec.name == "tonguetoquill-usaf-memo" {
         match path {
             "typst.toml" => load_string_asset("package-typst-toml").map(|a| a.content),
             "src/lib.typ" => load_string_asset("package-lib").map(|a| a.content),
