@@ -140,9 +140,7 @@ mod tests {
             "from-block": ["Test Sender", "Test Title", "Test Organization"],
             "subject": "Test Subject",
             "signature-block": ["Test Signature", "Test Title"],
-            "body": {
-                "data": "This is test memo content for WASM wrapper."
-            }
+            "body_raw": "This is test memo content for WASM wrapper."
         }"#;
         
         let config = RenderConfig {

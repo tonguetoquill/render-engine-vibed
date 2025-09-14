@@ -110,7 +110,7 @@ pub fn load_binary_asset(key: &str) -> Option<BinaryAssetResult> {
 
 /// Resolve package file content by package spec and path
 pub fn resolve_package_file(spec: &PackageSpec, path: &str) -> Option<&'static str> {
-    if spec.namespace == "preview" && spec.name == "tonguetoquill-usaf-memo" && spec.version.to_string() == "0.0.3" {
+    if spec.namespace == "preview" && spec.name == "tonguetoquill-usaf-memo" && spec.version.to_string() == "0.1.0" {
         match path {
             "typst.toml" => load_string_asset("package-typst-toml").map(|a| a.content),
             "src/lib.typ" => load_string_asset("package-lib").map(|a| a.content),

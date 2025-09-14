@@ -34,7 +34,7 @@ Standard `TypstWrapperError` enum covering compilation errors, font issues, and 
 All assets embedded at compile time using `include_bytes!` and `include_str!`:
 
 - **Fonts**: Arial, Times New Roman, Copperplate CC from `/assets`
-- **Templates**: lib.typ and utils.typ from tonguetoquill-usaf-memo:0.0.3
+- **Templates**: lib.typ and utils.typ from tonguetoquill-usaf-memo:0.1.0
 - **Images**: DoD seal and other memo assets
 
 **Benefits**: Self-contained binary, no external file dependencies, fast memory access.
