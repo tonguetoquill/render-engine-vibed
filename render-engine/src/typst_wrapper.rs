@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 use crate::assets;
+use crate::form_processor;
 use typst::diag::{FileError, FileResult};
 use typst::foundations::{Bytes, Datetime};
 use typst::layout::PagedDocument;
@@ -65,6 +66,7 @@ pub enum TypstWrapperError {
     OutputFormat(String),
     FileNotFound(String),
     Io(std::io::Error),
+    Validation(String),
 }
 
 impl std::fmt::Display for TypstWrapperError {
@@ -75,6 +77,7 @@ impl std::fmt::Display for TypstWrapperError {
             TypstWrapperError::OutputFormat(msg) => write!(f, "Output format error: {}", msg),
             TypstWrapperError::FileNotFound(msg) => write!(f, "File not found: {}", msg),
             TypstWrapperError::Io(e) => write!(f, "IO error: {}", e),
+            TypstWrapperError::Validation(msg) => write!(f, "Validation failed: {}", msg),
         }
     }
 }
@@ -148,6 +151,10 @@ impl TypstWrapper {
         // Create a completely fresh world for each render to avoid state pollution
         let mut world = TypstWorld::new();
         
+        // Validate and preprocess the form JSON (populate body_raw if needed)
+        let processed_input = form_processor::validate_and_preprocess_form_json(json_input)
+            .map_err(|e| TypstWrapperError::Validation(format!("{}", e)))?;
+
         // Use unique identifiers to ensure file IDs don't collide between renders
         // In WASM environments, SystemTime is not available, so we use a simple hash
         let timestamp = {
@@ -178,9 +185,9 @@ impl TypstWrapper {
         let json_filename = format!("input-{}.json", timestamp);
         let main_filename = format!("main-{}.typ", timestamp);
         
-        // Add the JSON input as a virtual file with unique name
+    // Add the processed JSON input as a virtual file with unique name
         let json_file_id = FileId::new(None, VirtualPath::new(&json_filename));
-        let json_source = Source::new(json_file_id, json_input.to_string());
+    let json_source = Source::new(json_file_id, processed_input);
         world.insert_source(json_source);
         
         // Load the memo-loader main template

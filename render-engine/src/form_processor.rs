@@ -89,6 +89,51 @@ pub fn validate_official_memo_schema(form_json: &str) -> Result<(), ParserError>
 	Ok(())
 }
 
+/// Preprocess a full form JSON string:
+/// - If `body_raw` is missing or empty, and a `body` content object is present,
+///   converts it to Typst markup and sets `body_raw`.
+/// Returns the updated JSON string.
+pub fn preprocess_form_json(form_json: &str) -> Result<String, ParserError> {
+	let mut input_value: JsonValue = serde_json::from_str(form_json)
+		.map_err(|e| ParserError::InvalidFormat(format!("Invalid form JSON: {}", e)))?;
+
+	// Determine whether to populate body_raw
+	let should_fill_body_raw = match input_value.get("body_raw") {
+		Some(v) => v.is_null() || (v.is_string() && v.as_str().unwrap_or("").is_empty()),
+		None => true,
+	};
+
+	if should_fill_body_raw {
+		if let Some(body_val) = input_value.get("body") {
+			if let Ok(content_obj) = serde_json::from_value::<Content>(body_val.clone()) {
+				match process_content(&content_obj) {
+					Ok(markup) => {
+						if let Some(obj) = input_value.as_object_mut() {
+							obj.insert("body_raw".to_string(), JsonValue::String(markup));
+						}
+					}
+					Err(e) => {
+						return Err(ParserError::InvalidFormat(format!(
+							"Failed to process body content: {}",
+							e
+						)));
+					}
+				}
+			}
+		}
+	}
+
+	serde_json::to_string(&input_value)
+		.map_err(|e| ParserError::InvalidFormat(format!("Failed to serialize processed input: {}", e)))
+}
+
+/// Validate the form JSON against the schema and then preprocess it.
+/// Returns the updated JSON string ready for rendering.
+pub fn validate_and_preprocess_form_json(form_json: &str) -> Result<String, ParserError> {
+	validate_official_memo_schema(form_json)?;
+	preprocess_form_json(form_json)
+}
+
 /// Attempt to load and parse the official memo schema from the repository file.
 /// Falls back to a minimal equivalent schema if parsing fails due to formatting issues
 /// (e.g., trailing commas or incomplete braces). This ensures validation can proceed.
