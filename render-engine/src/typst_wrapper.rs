@@ -131,8 +131,10 @@ impl TypstWrapper {
     ) -> Result<Vec<Vec<u8>>, TypstWrapperError> {
         let mut world = TypstWorld::new();
         
-        // Parse the main source
-        let source = Source::new(FileId::new(None, VirtualPath::new("main.typ")), markup.to_string());
+        let source = Source::new(
+            FileId::new(None, VirtualPath::new("main.typ")),
+            assets::rewrite_latest_imports(markup),
+        );
         world.insert_source(source);
         
         Self::render_file(world, config)
@@ -191,9 +193,10 @@ impl TypstWrapper {
             &format!("#let input = json(\"{}\")", json_filename)
         );
         
-        // Parse the memo-loader template as the main source with unique filename
+        // Preprocess to rewrite :latest imports to the hardcoded version and
+        // parse the memo-loader template as the main source with unique filename
         let memo_loader_file_id = FileId::new(None, VirtualPath::new(&main_filename));
-        let memo_loader_source = Source::new(memo_loader_file_id, template_content);
+        let memo_loader_source = Source::new(memo_loader_file_id, assets::rewrite_latest_imports(&template_content));
         world.insert_source(memo_loader_source);
         
         Self::render_file(world, config)
