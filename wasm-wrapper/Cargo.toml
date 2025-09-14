@@ -12,6 +12,9 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 render-engine = { path = "../render-engine" }
 console_error_panic_hook = { version = "0.1", optional = true }
 
+[target.wasm32-unknown-unknown.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
 [features]
 default = ["console_error_panic_hook"]
 debug = ["console_error_panic_hook"]

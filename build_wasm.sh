@@ -44,6 +44,8 @@ fi
 rustup target add wasm32-unknown-unknown >/dev/null 2>&1 || true
 
 # 1) Compile the crate to wasm (from the workspace root)
+# Ensure getrandom uses the wasm_js backend for wasm32-unknown-unknown
+export RUSTFLAGS="${RUSTFLAGS:-} --cfg getrandom_backend=\"wasm_js\""
 cargo build -p "$CRATE" $CARGO_FLAGS --target wasm32-unknown-unknown
 
 # 2) Generate JS bindings (web target) from the produced .wasm
