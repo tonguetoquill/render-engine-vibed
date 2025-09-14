@@ -1,5 +1,4 @@
 mod typst_wrapper;
-pub mod form_validation;
 pub mod parser;
 
 // Re-export only the necessary types for the public API
@@ -7,13 +6,6 @@ pub use typst_wrapper::{
     TypstWrapperError,
     OutputFormat,
     RenderConfig,
-};
-
-// Re-export form validation types
-pub use form_validation::{
-    MemoValidator,
-    ValidationError,
-    ValidationResult,
 };
 
 // Re-export parser types
