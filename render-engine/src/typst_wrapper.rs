@@ -419,7 +419,7 @@ mod tests {
     fn test_package_import() {
         // Test that the package system works
         let markup = r#"
-            #import "@preview/tonguetoquill-usaf-memo:0.1.0": official-memorandum
+            #import "@preview/tonguetoquill-usaf-memo:latest": official-memorandum
             
             #set page(width: 8.5in, height: 11in)
             #set text(font: "Times", size: 12pt)

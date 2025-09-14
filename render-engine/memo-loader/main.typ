@@ -1,4 +1,4 @@
-#import "@preview/tonguetoquill-usaf-memo:0.1.0": official-memorandum, indorsement
+#import "@preview/tonguetoquill-usaf-memo:latest": official-memorandum, indorsement
 
 
 #let input = json("input.json")
