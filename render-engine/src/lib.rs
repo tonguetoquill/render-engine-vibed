@@ -1,5 +1,6 @@
 mod typst_wrapper;
-pub mod parser;
+pub mod delta_parser;
+pub mod form_processor;
 
 // Re-export only the necessary types for the public API
 pub use typst_wrapper::{
@@ -9,7 +10,7 @@ pub use typst_wrapper::{
 };
 
 // Re-export parser types
-pub use parser::{
+pub use delta_parser::{
     DeltaParser,
     ParserError,
     QuillDelta,

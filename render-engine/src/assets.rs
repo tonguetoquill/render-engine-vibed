@@ -52,6 +52,11 @@ static STRING_ASSET_REGISTRY: LazyLock<HashMap<&'static str, StringAsset>> = Laz
         content: include_str!("../memo-loader/main.typ"),
         path: "../memo-loader/main.typ",
     });
+    // Official memorandum JSON schema asset
+    assets.insert("official-memo-schema", StringAsset {
+        content: include_str!("../../DESIGN/official-memorandum-schema.json"),
+        path: "../DESIGN/official-memorandum-schema.json",
+    });
     
     // Package assets
     assets.insert("package-typst-toml", StringAsset {
