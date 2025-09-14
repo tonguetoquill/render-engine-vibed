@@ -21,5 +21,8 @@
     "Your Official Duty Title",
     "Organization (optional)"
   ],
-  "body_raw": "This is the main body content of the memorandum. _italics_ *bold* #underline[underlined]"
+  "body": {
+    "format": "plaintext",
+    "data": "This is the main body content of the memorandum."
+  }
 }

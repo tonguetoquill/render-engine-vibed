@@ -467,9 +467,7 @@ mod tests {
             "from-block": ["Test Sender", "Test Title", "Test Organization"],
             "subject": "Test Subject",
             "signature-block": ["Test Signature", "Test Title"],
-            "body": {
-                "data": "This is a test memo content."
-            }
+            "body_raw": "This is a test memo content."
         }"#;
         
         let result = TypstWrapper::render_form(json_input, None);
@@ -488,9 +486,7 @@ mod tests {
             "from-block": ["Test Sender", "Test Title"],
             "subject": "PDF Test Subject",
             "signature-block": ["Test Signature", "Test Title"],
-            "body": {
-                "data": "This memo should be rendered as PDF."
-            }
+            "body_raw": "This memo should be rendered as PDF."
         }"#;
         
         let config = RenderConfig {

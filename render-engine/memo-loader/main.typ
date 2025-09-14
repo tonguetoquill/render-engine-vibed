@@ -41,7 +41,7 @@
   
 )[
   // Body content from JSON
-  #input.body.data
+  #eval(input.body_raw, mode: "markup")
 ]
 
 

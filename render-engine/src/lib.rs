@@ -1,5 +1,6 @@
 mod typst_wrapper;
 pub mod form_validation;
+pub mod parser;
 
 // Re-export only the necessary types for the public API
 pub use typst_wrapper::{
@@ -13,6 +14,14 @@ pub use form_validation::{
     MemoValidator,
     ValidationError,
     ValidationResult,
+};
+
+// Re-export parser types
+pub use parser::{
+    DeltaParser,
+    ParserError,
+    QuillDelta,
+    DeltaOperation,
 };
 
 pub mod assets;
@@ -75,9 +84,7 @@ pub fn render_markup(
 ///     "from-block": ["Sender Name", "Title", "Organization"], 
 ///     "subject": "Test Subject",
 ///     "signature-block": ["Signature Name", "Title"],
-///     "body": {
-///         "data": "Hello, world! This is the memo content."
-///     }
+///     "body_raw": "Hello, world! This is the memo content."
 /// }
 /// "#;
 /// 

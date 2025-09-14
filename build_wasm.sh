@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Parse command line arguments
-BUILD_MODE="release"
+BUILD_MODE="debug"
 if [ $# -gt 0 ]; then
     case "$1" in
         debug|--debug|-d)
