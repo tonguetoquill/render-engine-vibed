@@ -7,9 +7,9 @@
       "properties": {
         "format": {
           "type": "string",
-          "enum": ["plaintext"],
+          "enum": ["markup","delta"],
           "description": "Content format type",
-          "default": "plaintext"
+          "default": "markup"
         },
         "data": {
           "type": "string",
