@@ -27,58 +27,41 @@ fi
 
 CRATE=wasm-wrapper
 PKG_DIR="$CRATE/pkg"
-TARGET_DIR="target/wasm32-unknown-unknown/$BUILD_MODE"
-OUT_NAME=wasm_wrapper
 
 if [ "$BUILD_MODE" = "debug" ]; then
-    echo "==> Building debug WASM binary ($CRATE)…"
-    CARGO_FLAGS=""
+    echo "==> Building debug WASM package with wasm-pack ($CRATE)…"
+    WASM_PACK_FLAGS="--dev"
     WASM_OPT_FLAGS="-O1"
 else
-    echo "==> Building optimized WASM binary ($CRATE)…"
-    CARGO_FLAGS="--release"
-    WASM_OPT_FLAGS="-Oz"
+    echo "==> Building optimized WASM package with wasm-pack ($CRATE)…"
+    WASM_PACK_FLAGS=""
+    WASM_OPT_FLAGS="-Oz --enable-bulk-memory --enable-nontrapping-float-to-int --detect-features --enable-simd"
 fi
 
-# Ensure wasm target exists
-rustup target add wasm32-unknown-unknown >/dev/null 2>&1 || true
-
-# 1) Compile the crate to wasm (from the workspace root)
 # Ensure getrandom uses the wasm_js backend for wasm32-unknown-unknown
 export RUSTFLAGS="${RUSTFLAGS:-} --cfg getrandom_backend=\"wasm_js\""
-cargo build -p "$CRATE" $CARGO_FLAGS --target wasm32-unknown-unknown
 
-# 2) Generate JS bindings (web target) from the produced .wasm
-mkdir -p "$PKG_DIR"
-wasm-bindgen \
-  --target web \
-  --out-dir "$PKG_DIR" \
-  --out-name "$OUT_NAME" \
-  "$TARGET_DIR/${CRATE//-/_}.wasm"
+# Build with wasm-pack (bundler target for better integration)
+cd "$CRATE"
+wasm-pack build \
+  --target bundler \
+  --out-dir pkg \
+  $WASM_PACK_FLAGS
+cd ..
 
-WASM="$PKG_DIR/${OUT_NAME}_bg.wasm"
-OPT_WASM="$PKG_DIR/${OUT_NAME}_bg.opt.wasm"
-
-echo "Size before wasm-opt:"
-ls -lh "$WASM" | awk '{print $5, $9}'
-
-# 3) Optimize
-if [ "$BUILD_MODE" = "debug" ]; then
-    echo "==> Skipping wasm-opt in debug mode (creating symlink to original file)…"
-    ln -sf "$(basename "$WASM")" "$OPT_WASM"
+# Optimize the generated WASM with wasm-opt
+WASM_FILE="$PKG_DIR/wasm_wrapper_bg.wasm"
+if [ -f "$WASM_FILE" ]; then
+    echo "==> Optimizing WASM binary with wasm-opt ($WASM_OPT_FLAGS)…"
+    wasm-opt $WASM_OPT_FLAGS "$WASM_FILE" -o "$WASM_FILE.opt"
+    mv "$WASM_FILE.opt" "$WASM_FILE"
+    
+    # Create gzipped version for size comparison
+    gzip -9 -c "$WASM_FILE" > "$WASM_FILE.gz"
+    
+    echo "==> Build complete!"
+    echo "    WASM file: $WASM_FILE"
+    echo "    Size: $(du -h "$WASM_FILE" | cut -f1) ($(du -h "$WASM_FILE.gz" | cut -f1) gzipped)"
 else
-    echo "==> Running wasm-opt (full optimization for release)…"
-    wasm-opt $WASM_OPT_FLAGS --enable-bulk-memory --enable-nontrapping-float-to-int --detect-features \
-      -o "$OPT_WASM" "$WASM"
+    echo "Warning: Expected WASM file not found at $WASM_FILE"
 fi
-
-echo "Size after processing:"
-ls -lh "$OPT_WASM" | awk '{print $5, $9}'
-
-# 4) Gzip artifacts
-echo "==> Creating gzipped versions for deployment…"
-gzip -c "$WASM" > "$WASM.gz"
-gzip -c "$OPT_WASM" > "$OPT_WASM.gz"
-
-echo "==> Build complete! Outputs in ./$PKG_DIR"
-ls -lh "$PKG_DIR"/*.{wasm,wasm.gz} | awk '{print $5, $9}'

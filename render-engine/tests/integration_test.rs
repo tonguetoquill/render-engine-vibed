@@ -58,26 +58,34 @@ fn test_usaf_template_render() {
 #[test]
 fn test_render_form_with_provided_input() {
         let json_input = r#"{
-    "memo-for": [
-        "Commander, Air Force Test Center"
-    ],
-    "from-block": [
-        "John A. Smith",
-        "Colonel, USAF",
-        "412th Test Wing"
-    ],
-    "subject": "Test Memorandum Generated via WASM Interface",
-    "signature-block": [
-        "JOHN A. SMITH",
-        "Colonel, USAF"
-    ],
-    "body": {
-        "format": "markup",
-        "data": "This is a test official memorandum generated using the WASM render engine.\n\n1. This demonstrates form-based input for memo generation\n2. The JSON is validated against the official memorandum schema\n3. Real-time rendering shows immediate results\n\nThis memorandum serves as a proof of concept for web-based document generation using Typst and WASM technology integration."
-    },
-    "references": null
+  "letterhead-title": "DEPARTMENT OF THE AIR FORCE",
+  "letterhead-caption": "123RD EXAMPLE SQUADRON",
+  "memo-for": [
+    "[FIRST/OFFICE]",
+    "[SECOND/OFFICE]",
+    "[THIRD/OFFICE]",
+    "[FOURTH/OFFICE]",
+    "[FIFTH/OFFICE]",
+    "[SIXTH/OFFICE]"
+  ],
+  "from-block": [
+    "[YOUR/SYMBOL]",
+    "[Your Organization Name]",
+    "[Street Address]",
+    "[City ST 12345-6789]"
+  ],
+  "subject": "[Your Subject in Title Case - Required Field]",
+  "body": {
+    "format": "markup",
+    "data": ""
+  },
+  "signature-block": [
+    "[FIRST M. LAST, Rank, USAF]",
+    "[Your Official Duty Title]",
+    "[Organization (optional)]"
+  ],
+  "date": "2025-09-01T00:00:00Z"
 }"#;
-
         // Render as SVG (default)
         let svg_result = render_form(json_input, None);
         assert!(svg_result.is_ok(), "SVG render_form failed: {:?}", svg_result.err());

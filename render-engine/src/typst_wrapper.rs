@@ -11,8 +11,6 @@ use typst::text::{Font, FontBook, FontInfo};
 use typst::utils::LazyHash;
 use typst::{Library, World};
 
-
-
 // Static font collections initialized at compile time
 static FONT_BOOK: LazyLock<LazyHash<FontBook>> = LazyLock::new(|| {
     let mut book = FontBook::new();
@@ -150,11 +148,13 @@ impl TypstWrapper {
     ) -> Result<Vec<Vec<u8>>, TypstWrapperError> {
         // Create a completely fresh world for each render to avoid state pollution
         let mut world = TypstWorld::new();
-        
+
         // Validate and preprocess the form JSON (populate body_raw if needed)
         let processed_input = form_processor::validate_and_preprocess_form_json(json_input)
             .map_err(|e| TypstWrapperError::Validation(format!("{}", e)))?;
 
+
+        
         // Use unique identifiers to ensure file IDs don't collide between renders
         // In WASM environments, SystemTime is not available, so we use a simple hash
         let timestamp = {

@@ -18,6 +18,7 @@ pub use delta_parser::{
 };
 
 pub mod assets;
+pub mod macros;
 
 /// Render Typst markup to bytes (returns array of pages for SVG, single item for PDF)
 /// 

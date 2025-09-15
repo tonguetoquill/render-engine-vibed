@@ -4,13 +4,28 @@
 #let input = json("input.json")
 #let try_get(key, default) = if key not in input { default } else { input.at(key) }
 
-#if "date" in input {
-  let parsed-date(iso-string) = toml(bytes("date =  "+ iso-string )).date
-  let date = parsed-date(input.date)
-  assert(type(date) == datetime,message:  "Error: 'date' must be in YYYY-MM-DD format")
-  input.insert("date", date)
+// Parse the date from input, supporting ISO formats
+#let parsed-datetime = if "date" in input {
+  // Parse ISO date strings (supports both YYYY-MM-DD and YYYY-MM-DDTHH:MM:SSZ formats)
+  let parse-iso-date(iso-string) = {
+    // Extract just the date part (YYYY-MM-DD) from ISO string
+    let date-part = if iso-string.contains("T") {
+      iso-string.split("T").at(0)
+    } else {
+      iso-string
+    }
+    
+    // Parse using TOML date format
+    let toml-content = "date = " + date-part
+    let parsed = toml(bytes(toml-content))
+    parsed.date
+  }
+  
+  let parsed-date = parse-iso-date(input.date)
+  assert(type(parsed-date) == datetime, message: "Error: 'date' must be in ISO (YYYY-MM-DD) or (YYYY-MM-DDTHH:MM:SSZ) format")
+  parsed-date
 } else {
-  input.insert("date", datetime.today())
+  datetime.today()
 }
 
 // Generate the official memorandum with validated and processed input
@@ -22,7 +37,7 @@
   letterhead-font: "Copperplate CC",
 
   // Date
-  date: try_get("date", datetime.today()),
+  date: parsed-datetime,
   
   // Recipients
   memo-for: input.memo-for,
