@@ -13,8 +13,6 @@ pub use typst_wrapper::{
 pub use delta_parser::{
     DeltaParser,
     ParserError,
-    QuillDelta,
-    DeltaOperation,
 };
 
 pub mod assets;
